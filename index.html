@@ -427,11 +427,6 @@ function renderDetail() {
   const slots = dayData?.slots || [];
   badge.textContent = `${slots.length}개`;
 
-  if (!slots.length) {
-    detailEl.innerHTML = '<div class="no-event">이 날은 등록된 일정이 없어요.<br>아래에서 일정을 추가해보세요.</div>';
-    return;
-  }
-
   const attending = dayData?.members || [];
   const memberChips = masterRoster.map(name => {
     const isAttending = attending.includes(name);
@@ -441,41 +436,43 @@ function renderDetail() {
   }).join('');
   const attendCount = attending.filter(n => masterRoster.includes(n)).length;
 
-  const slotRows = slots.map(e => {
-    const statusCls = e.status==='paid' ? 'status-paid' : 'status-pending';
-    const statusLabel = e.status==='paid' ? '결제완료' : '예약완료';
-    return `
-    <div class="slot-card" id="slot-card-${e.id}">
-      <div class="slot-row" onclick="toggleSlotEdit(${e.id})">
-        <div class="court-dot" style="width:10px;height:10px;border-radius:50%;background:${courtColor[e.court]};flex-shrink:0;"></div>
-        <span class="slot-court">${e.court}코트</span>
-        <span class="slot-time">${e.start} – ${e.end}</span>
-        <span class="status-badge ${statusCls}">${statusLabel}</span>
-        ${e.memo ? `<span class="slot-memo">📝 ${e.memo}</span>` : '<span class="slot-memo"></span>'}
-        <button onclick="event.stopPropagation();deleteSlot('${selectedDate}',${e.id})" class="slot-del" title="삭제">×</button>
-      </div>
-      <div class="slot-edit" id="slot-edit-${e.id}">
-        <div>
-          <div class="edit-label">상태</div>
-          <div class="edit-status-row">
-            <button class="edit-status-btn ${e.status==='pending'?'active-pending':''}" id="btn-pending-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'pending')">예약완료</button>
-            <button class="edit-status-btn ${e.status==='paid'?'active-paid':''}" id="btn-paid-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'paid')">결제완료</button>
+  const slotSection = slots.length ? `
+    <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin:14px 0 6px;">코트 일정 (${slots.length}개)</div>
+    <div class="slots-list">${slots.map(e => {
+      const statusCls = e.status==='paid' ? 'status-paid' : 'status-pending';
+      const statusLabel = e.status==='paid' ? '결제완료' : '예약완료';
+      return `
+      <div class="slot-card" id="slot-card-${e.id}">
+        <div class="slot-row" onclick="toggleSlotEdit(${e.id})">
+          <div class="court-dot" style="width:10px;height:10px;border-radius:50%;background:${courtColor[e.court]};flex-shrink:0;"></div>
+          <span class="slot-court">${e.court}코트</span>
+          <span class="slot-time">${e.start} – ${e.end}</span>
+          <span class="status-badge ${statusCls}">${statusLabel}</span>
+          ${e.memo ? `<span class="slot-memo">📝 ${e.memo}</span>` : '<span class="slot-memo"></span>'}
+          <button onclick="event.stopPropagation();deleteSlot('${selectedDate}',${e.id})" class="slot-del" title="삭제">×</button>
+        </div>
+        <div class="slot-edit" id="slot-edit-${e.id}">
+          <div>
+            <div class="edit-label">상태</div>
+            <div class="edit-status-row">
+              <button class="edit-status-btn ${e.status==='pending'?'active-pending':''}" id="btn-pending-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'pending')">예약완료</button>
+              <button class="edit-status-btn ${e.status==='paid'?'active-paid':''}" id="btn-paid-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'paid')">결제완료</button>
+            </div>
           </div>
+          <div class="edit-row">
+            <div><div class="edit-label">시작 시간</div><input class="edit-time" type="time" id="edit-start-${e.id}" value="${e.start}" oninput="autoEditEnd(${e.id})"></div>
+            <div><div class="edit-label">종료 시간</div><input class="edit-time" type="time" id="edit-end-${e.id}" value="${e.end}"></div>
+          </div>
+          <button class="edit-save-btn" onclick="saveSlotEdit('${selectedDate}',${e.id})">저장</button>
         </div>
-        <div class="edit-row">
-          <div><div class="edit-label">시작 시간</div><input class="edit-time" type="time" id="edit-start-${e.id}" value="${e.start}" oninput="autoEditEnd(${e.id})"></div>
-          <div><div class="edit-label">종료 시간</div><input class="edit-time" type="time" id="edit-end-${e.id}" value="${e.end}"></div>
-        </div>
-        <button class="edit-save-btn" onclick="saveSlotEdit('${selectedDate}',${e.id})">저장</button>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join('')}</div>
+  ` : `<div style="font-size:11px;color:var(--text-hint);margin-top:14px;padding:10px;background:var(--surface2);border-radius:7px;text-align:center;">코트 일정이 없어요. 아래에서 추가할 수 있어요.</div>`;
 
   detailEl.innerHTML = `
     <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:8px;">참여자 (${attendCount}/${masterRoster.length}명) — 클릭으로 참여/불참 전환</div>
     <div class="member-grid">${memberChips}</div>
-    <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin:14px 0 6px;">코트 일정 (${slots.length}개)</div>
-    <div class="slots-list">${slotRows}</div>
+    ${slotSection}
   `;
 }
 
