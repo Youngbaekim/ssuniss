@@ -390,7 +390,8 @@ function renderCalendar() {
     const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = new Date(y, m, d).getDay();
     const slots = events[ds]?.slots || [];
-    let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + (slots.length?' has-event':'');
+    const members = events[ds]?.members || [];
+    let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + ((slots.length || members.length) ?' has-event':'');
     let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court} ${e.start}</div>`).join('');
     if (slots.length > 2) chips += `<div class="event-chip" style="background:var(--surface2);color:var(--text-hint)">+${slots.length-2}개</div>`;
     html += `<div class="${cls}" onclick="selectDate('${ds}')"><div class="day-num">${d}</div>${chips}</div>`;
