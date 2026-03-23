@@ -61,6 +61,7 @@
   .event-chip.court-2 { background: var(--yellow-light); color: var(--yellow); }
   .event-chip.court-3 { background: #e8eaf6; color: #3949ab; }
   .event-chip.court-4 { background: var(--court4-light); color: var(--court4); }
+  .event-chip.court-etc { background: #f1efe8; color: #5f5e5a; }
 
   /* ── Panel / Card ── */
   .panel { display: flex; flex-direction: column; gap: 16px; }
@@ -158,7 +159,7 @@
 </div>
 
 <div class="header">
-  <div class="header-title"><span>🎾</span> 숭실대학교 직원 테니스 동아리, 슈니스!</div>
+  <div class="header-title"><span>🎾</span> SSU Tennis, SSUNISS!!</div>
   <div class="month-nav">
     <button onclick="prevMonth()">‹</button>
     <div class="month-label" id="month-label"></div>
@@ -224,12 +225,17 @@
           </div>
           <div class="form-row">
             <div class="form-label">코트</div>
-            <select class="form-select" id="new-court">
+            <select class="form-select" id="new-court" onchange="toggleCustomCourt()">
               <option value="1">1코트</option>
               <option value="2">2코트</option>
               <option value="3">3코트</option>
               <option value="4">4코트</option>
+              <option value="기타">기타코트</option>
             </select>
+          </div>
+          <div class="form-row" id="custom-court-row" style="display:none;">
+            <div class="form-label">코트명 직접 입력</div>
+            <input type="text" class="form-input" id="custom-court-name" placeholder="예: 5코트, 실내코트 등">
           </div>
           <div class="form-row-2">
             <div class="form-row">
@@ -294,6 +300,8 @@ let events = {}; // { 'YYYY-MM-DD': { members: [], slots: [] } }
 
 const courtClass = { '1':'court-1','2':'court-2','3':'court-3','4':'court-4' };
 const courtColor = { '1':'#52b788','2':'#e07a00','3':'#5c6bc0','4':'#7c4dbd' };
+function getCourtClass(c) { return courtClass[c] || 'court-etc'; }
+function getCourtColor(c) { return courtColor[c] || '#888780'; }
 const weekDaysFull = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
 
 // ── 로딩 ───────────────────────────────────────────────────
@@ -349,6 +357,13 @@ async function loadMonthData() {
   });
 }
 
+// ── 기타코트 입력 토글 ────────────────────────────────────
+function toggleCustomCourt() {
+  const val = document.getElementById('new-court').value;
+  document.getElementById('custom-court-row').style.display = val === '기타' ? 'flex' : 'none';
+  if (val === '기타') document.getElementById('custom-court-name').focus();
+}
+
 // ── 자동 종료 시간 ─────────────────────────────────────────
 function autoSetEnd() {
   const v = document.getElementById('new-start').value;
@@ -373,7 +388,7 @@ function renderCalendar() {
     const dow = new Date(y, m, d).getDay();
     const slots = events[ds]?.slots || [];
     let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + (slots.length?' has-event':'');
-    let chips = slots.slice(0,2).map(e => `<div class="event-chip ${courtClass[e.court]}" onclick="event.stopPropagation();selectDate('${ds}')">${e.court}코트 ${e.start}</div>`).join('');
+    let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court} ${e.start}</div>`).join('');
     if (slots.length > 2) chips += `<div class="event-chip" style="background:var(--surface2);color:var(--text-hint)">+${slots.length-2}개</div>`;
     html += `<div class="${cls}" onclick="selectDate('${ds}')"><div class="day-num">${d}</div>${chips}</div>`;
   }
@@ -444,8 +459,8 @@ function renderDetail() {
       return `
       <div class="slot-card" id="slot-card-${e.id}">
         <div class="slot-row" onclick="toggleSlotEdit(${e.id})">
-          <div class="court-dot" style="width:10px;height:10px;border-radius:50%;background:${courtColor[e.court]};flex-shrink:0;"></div>
-          <span class="slot-court">${e.court}코트</span>
+          <div class="court-dot" style="width:10px;height:10px;border-radius:50%;background:${getCourtColor(e.court)};flex-shrink:0;"></div>
+          <span class="slot-court">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court}</span>
           <span class="slot-time">${e.start} – ${e.end}</span>
           <span class="status-badge ${statusCls}">${statusLabel}</span>
           ${e.memo ? `<span class="slot-memo">📝 ${e.memo}</span>` : '<span class="slot-memo"></span>'}
@@ -495,7 +510,11 @@ async function addEvent() {
   const date  = document.getElementById('new-date').value;
   const start = document.getElementById('new-start').value;
   const end   = document.getElementById('new-end').value;
-  const court = document.getElementById('new-court').value;
+  let court = document.getElementById('new-court').value;
+  if (court === '기타') {
+    court = document.getElementById('custom-court-name').value.trim();
+    if (!court) { alert('코트명을 입력해주세요.'); return; }
+  }
   const memo  = document.getElementById('new-memo').value;
   if (!date) { alert('날짜를 선택해주세요.'); return; }
   if (start >= end) { alert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
