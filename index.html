@@ -80,7 +80,7 @@
   .member-chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; cursor: pointer; user-select: none; transition: background 0.13s, color 0.13s, border-color 0.13s, transform 0.1s; display: flex; align-items: center; gap: 5px; font-weight: 500; }
   .member-chip:active { transform: scale(0.95); }
   .member-chip.attending { background: var(--accent-light); border: 1.5px solid #8ecdb2; color: var(--accent); }
-  .member-chip.absent { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text-hint); text-decoration: line-through; }
+  .member-chip.absent { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text-hint); }
   .chip-icon { font-size: 10px; line-height: 1; }
 
   /* ── Form ── */
@@ -158,7 +158,7 @@
 </div>
 
 <div class="header">
-  <div class="header-title"><span>🎾</span> SSU Tennis, SSUNISS!</div>
+  <div class="header-title"><span>🎾</span> 숭실대학교 직원 테니스 동아리, 슈니스!</div>
   <div class="month-nav">
     <button onclick="prevMonth()">‹</button>
     <div class="month-label" id="month-label"></div>
@@ -431,7 +431,7 @@ function renderDetail() {
   const memberChips = masterRoster.map(name => {
     const isAttending = attending.includes(name);
     return `<div class="member-chip ${isAttending?'attending':'absent'}" onclick="toggleMember('${selectedDate}','${name}')">
-      <span class="chip-icon">${isAttending?'✓':'–'}</span>${name}
+      ${isAttending ? '<span class="chip-icon">✓</span>' : ''}${name}
     </div>`;
   }).join('');
   const attendCount = attending.filter(n => masterRoster.includes(n)).length;
