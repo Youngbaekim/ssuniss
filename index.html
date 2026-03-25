@@ -170,6 +170,19 @@
   </div>
 </div>
 
+<!-- 결제 알림 배너 -->
+<div id="pay-banner" style="display:none; background:#fff3cd; border-bottom:2px solid #ffc107; padding:12px 24px; display:none; align-items:center; justify-content:space-between; gap:12px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-size:20px;">💳</span>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#856404;">다음 달 코트 결제 기간이에요!</div>
+      <div style="font-size:12px;color:#a07800;margin-top:2px;">매월 20일까지 코트 예약 결제를 완료해주세요 🎾</div>
+    </div>
+  </div>
+  <button onclick="document.getElementById('pay-banner').style.display='none'"
+    style="background:none;border:none;cursor:pointer;font-size:18px;color:#856404;flex-shrink:0;padding:0 4px;">×</button>
+</div>
+
 <div class="main">
   <!-- Left: Calendar -->
   <div>
@@ -672,7 +685,17 @@ function renderMembersOverview() {
   renderRoster();
 }
 
+// ── 결제 알림 배너 ────────────────────────────────────────
+function checkPaymentBanner() {
+  const today = new Date();
+  const day = today.getDate();
+  if (day >= 15 && day <= 20) {
+    document.getElementById('pay-banner').style.display = 'flex';
+  }
+}
+
 // ── 시작 ─────────────────────────────────────────────────
+checkPaymentBanner();
 loadAll();
 </script>
 </body>
