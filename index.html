@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>슈니스 일정</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FRXFPKJ1CF"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-FRXFPKJ1CF');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -295,6 +302,17 @@
             onkeydown="if(event.key==='Enter') addRosterMember()">
           <button onclick="addRosterMember()">+ 추가</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 방문자 통계 -->
+    <div class="card">
+      <div class="card-head">
+        <h3>방문자 통계</h3>
+        <span class="badge" id="visit-total-badge">-</span>
+      </div>
+      <div class="card-body" id="visit-stats" style="padding-top:10px;padding-bottom:10px;">
+        <div style="text-align:center;font-size:13px;color:var(--text-hint);">불러오는 중...</div>
       </div>
     </div>
 
@@ -685,6 +703,66 @@ function renderMembersOverview() {
   renderRoster();
 }
 
+// ── 방문자 기록 ───────────────────────────────────────────
+async function trackVisit() {
+  const today = new Date().toISOString().split('T')[0];
+  await sb.rpc('upsert_visit', { visit_date: today });
+}
+
+// ── 방문자 통계 렌더링 ────────────────────────────────────
+async function renderVisitStats() {
+  const { data } = await sb.from('visits').select('*').order('visited_at', { ascending: false });
+  if (!data || !data.length) {
+    document.getElementById('visit-stats').innerHTML = '<div style="text-align:center;font-size:13px;color:var(--text-hint);">아직 데이터가 없어요</div>';
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const monthStr = today.slice(0, 7);
+
+  const todayRow  = data.find(r => r.visited_at === today);
+  const todayCount = todayRow ? todayRow.count : 0;
+  const monthCount = data.filter(r => r.visited_at.startsWith(monthStr)).reduce((s, r) => s + r.count, 0);
+  const totalCount = data.reduce((s, r) => s + r.count, 0);
+
+  document.getElementById('visit-total-badge').textContent = `총 ${totalCount.toLocaleString()}회`;
+
+  // 최근 7일
+  const recentRows = data.slice(0, 7);
+  const maxCount = Math.max(...recentRows.map(r => r.count), 1);
+
+  document.getElementById('visit-stats').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
+        <div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;">오늘</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;">${todayCount}</div>
+      </div>
+      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
+        <div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;">이번 달</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;">${monthCount}</div>
+      </div>
+      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
+        <div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;">누적</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;">${totalCount}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:8px;">최근 7일</div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      ${recentRows.map(r => {
+        const pct = Math.round((r.count / maxCount) * 100);
+        const dateLabel = r.visited_at.slice(5).replace('-', '/');
+        return `<div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:11px;color:var(--text-hint);font-family:'DM Mono',monospace;min-width:36px;">${dateLabel}</div>
+          <div style="flex:1;background:var(--surface2);border-radius:4px;height:14px;overflow:hidden;">
+            <div style="width:${pct}%;background:var(--accent-mid);height:100%;border-radius:4px;transition:width 0.4s;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace;min-width:24px;text-align:right;">${r.count}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
 // ── 결제 알림 배너 ────────────────────────────────────────
 function checkPaymentBanner() {
   const today = new Date();
@@ -695,8 +773,10 @@ function checkPaymentBanner() {
 }
 
 // ── 시작 ─────────────────────────────────────────────────
+trackVisit();
 checkPaymentBanner();
 loadAll();
+renderVisitStats();
 </script>
 </body>
 </html>
