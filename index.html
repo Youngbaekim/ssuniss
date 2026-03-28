@@ -71,7 +71,12 @@
   .event-chip.court-3 { background: #e8eaf6; color: #3949ab; }
   .event-chip.court-4 { background: var(--court4-light); color: var(--court4); }
   .event-chip.court-etc { background: #f1efe8; color: #5f5e5a; }
-  .event-chip.court-etc { background: #f1efe8; color: #5f5e5a; }
+
+  /* ── 날씨 ── */
+  .weather-row { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; }
+  .w-icon { font-size: 11px; line-height: 1; }
+  .w-temp { font-size: 10px; color: var(--text-sub); font-weight: 500; }
+  .w-rain { font-size: 9px; color: #4472b8; font-weight: 500; margin-left: 1px; }
 
   /* ── Panel / Card ── */
   .panel { display: flex; flex-direction: column; gap: 16px; }
@@ -176,6 +181,23 @@
   .btn-save:disabled { background: var(--text-hint); cursor: not-allowed; }
   .btn-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
   .btn-cancel:hover { background: var(--border); }
+
+  /* ── 편집 모드 ── */
+  .edit-mode-btn { background: rgba(255,255,255,0.18); border: none; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; display: flex; align-items: center; gap: 5px; }
+  .edit-mode-btn:hover { background: rgba(255,255,255,0.3); }
+  .edit-mode-btn.active { background: #52b788; color: white; }
+  .readonly-mask { pointer-events: none; opacity: 0.5; user-select: none; }
+  .pw-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: flex; align-items: center; justify-content: center; }
+  .pw-modal-backdrop.hidden { display: none; }
+  .pw-box { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .pw-title { font-size: 15px; font-weight: 600; margin-bottom:4px; }
+  .pw-sub { font-size: 12px; color: var(--text-hint); margin-bottom: 16px; }
+  .pw-input { width: 100%; border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface2); color: var(--text); outline: none; transition: border-color 0.15s; margin-bottom: 8px; }
+  .pw-input:focus { border-color: var(--accent-mid); }
+  .pw-error { font-size: 12px; color: var(--red); min-height: 16px; margin-bottom: 12px; }
+  .pw-btns { display: flex; gap: 8px; }
+  .pw-confirm { flex: 1; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .pw-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
 </style>
 </head>
 <body>
@@ -188,10 +210,15 @@
 
 <div class="header">
   <div class="header-title"><span>🎾</span> SSU Tennis, SSUNISS!!</div>
-  <div class="month-nav">
-    <button onclick="prevMonth()">‹</button>
-    <div class="month-label" id="month-label"></div>
-    <button onclick="nextMonth()">›</button>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">
+      <span id="edit-mode-icon">🔒</span><span id="edit-mode-label">편집</span>
+    </button>
+    <div class="month-nav">
+      <button onclick="prevMonth()">‹</button>
+      <div class="month-label" id="month-label"></div>
+      <button onclick="nextMonth()">›</button>
+    </div>
   </div>
 </div>
 
@@ -201,7 +228,7 @@
     <span style="font-size:20px;">💳</span>
     <div>
       <div style="font-size:13px;font-weight:700;color:#856404;">다음 달 코트 결제 기간이에요!</div>
-      <div style="font-size:12px;color:#a07800;margin-top:2px;">매월 22일 9시 전까지 코트 예약 결제를 완료해주세요 🎾</div>
+      <div style="font-size:12px;color:#a07800;margin-top:2px;">매월 22일 9시까지 코트 예약 결제를 완료해주세요 🎾</div>
     </div>
   </div>
   <button onclick="document.getElementById('pay-banner').style.display='none'"
@@ -236,7 +263,7 @@
         </button>
       </div>
       <div style="margin-top:8px;font-size:12px;color:var(--red);font-weight:500;">
-        📌 예약일정: 1~15일 18시 / 추첨 18일 10시 / 결제 22일 9시 이전!!
+        📌 예약일정: 1~15일 18시 / 추첨 18일 10시 / 결제 22일 9시
       </div>
     </div>
   </div>
@@ -429,6 +456,36 @@ function autoSetEnd() {
   document.getElementById('new-end').value = `${String(eh).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
+// ── 날씨 데이터 (Open-Meteo, 서울) ───────────────────────
+let weatherData = {};
+
+const WMO_ICON = {
+  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+  45:'🌫️', 48:'🌫️',
+  51:'🌦️', 53:'🌦️', 55:'🌧️',
+  61:'🌧️', 63:'🌧️', 65:'🌧️',
+  71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
+  80:'🌦️', 81:'🌧️', 82:'⛈️',
+  85:'❄️', 86:'❄️', 95:'⛈️', 96:'⛈️', 99:'⛈️'
+};
+
+async function loadWeather() {
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16';
+    const res = await fetch(url);
+    const data = await res.json();
+    weatherData = {};
+    data.daily.time.forEach((date, i) => {
+      weatherData[date] = {
+        icon: WMO_ICON[data.daily.weathercode[i]] || '🌡️',
+        max:  Math.round(data.daily.temperature_2m_max[i]),
+        min:  Math.round(data.daily.temperature_2m_min[i]),
+        rain: data.daily.precipitation_probability_max[i]
+      };
+    });
+  } catch(e) {}
+}
+
 // ── 캘린더 ────────────────────────────────────────────────
 function renderCalendar() {
   const y = currentYear, m = currentMonth;
@@ -444,10 +501,12 @@ function renderCalendar() {
     const dow = new Date(y, m, d).getDay();
     const slots = events[ds]?.slots || [];
     const members = events[ds]?.members || [];
+    const w = weatherData[ds];
     let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + ((slots.length || members.length) ?' has-event':'');
+    const weatherHtml = w ? `<div class="weather-row"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : '';
     let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court} ${e.start}</div>`).join('');
     if (slots.length > 2) chips += `<div class="event-chip" style="background:var(--surface2);color:var(--text-hint)">+${slots.length-2}개</div>`;
-    html += `<div class="${cls}" onclick="selectDate('${ds}')"><div class="day-num">${d}</div>${chips}</div>`;
+    html += `<div class="${cls}" onclick="selectDate('${ds}')"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><div class="day-num" style="margin-bottom:0;">${d}</div>${w ? `<div class="weather-row" style="margin-bottom:0;"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : ''}</div>${chips}</div>`;
   }
   const rem = (firstDay + daysInMonth) % 7;
   if (rem) for (let i = 0; i < 7 - rem; i++) html += `<div class="cal-day empty"></div>`;
@@ -552,6 +611,7 @@ function renderDetail() {
 
 // ── 참여자 토글 ───────────────────────────────────────────
 async function toggleMember(dateStr, name) {
+  if (!requireEdit()) return;
   if (!events[dateStr]) events[dateStr] = { members: [], slots: [] };
   const members = events[dateStr].members;
   const idx = members.indexOf(name);
@@ -566,6 +626,7 @@ async function toggleMember(dateStr, name) {
 
 // ── 일정 추가 ─────────────────────────────────────────────
 async function addEvent() {
+  if (!requireEdit()) return;
   const date  = document.getElementById('new-date').value;
   const start = document.getElementById('new-start').value;
   const end   = document.getElementById('new-end').value;
@@ -605,6 +666,7 @@ async function addEvent() {
 
 // ── 슬롯 삭제 ─────────────────────────────────────────────
 async function deleteSlot(dateStr, id) {
+  if (!requireEdit()) return;
   if (!confirm('이 코트 일정을 삭제할까요?')) return;
   showLoading('삭제 중...');
   await sb.from('slots').delete().eq('id', id);
@@ -626,6 +688,7 @@ function toggleSlotEdit(id) {
 }
 
 async function setSlotStatus(dateStr, id, status) {
+  if (!requireEdit()) return;
   const slot = events[dateStr]?.slots?.find(s => s.id === id);
   if (!slot) return;
   slot.status = status;
@@ -646,6 +709,7 @@ function autoEditEnd(id) {
 }
 
 async function saveSlotEdit(dateStr, id) {
+  if (!requireEdit()) return;
   const slot = events[dateStr]?.slots?.find(s => s.id === id);
   if (!slot) return;
   const newStart = document.getElementById(`edit-start-${id}`).value;
@@ -678,6 +742,7 @@ function renderRoster() {
 }
 
 async function addRosterMember() {
+  if (!requireEdit()) return;
   const inp = document.getElementById('roster-input');
   const name = inp.value.trim();
   if (!name) return;
@@ -692,6 +757,7 @@ async function addRosterMember() {
 }
 
 async function deleteRosterMember(name) {
+  if (!requireEdit()) return;
   if (getMonthlyCount(name) > 0) { alert('이번 달 참여 일정이 있어 삭제할 수 없어요.'); return; }
   if (!confirm(`'${name}'을(를) 전체 명단에서 삭제할까요?`)) return;
   showLoading('삭제 중...');
@@ -796,6 +862,73 @@ function checkPaymentBanner() {
   if (show) document.getElementById('pay-banner').style.display = 'flex';
 }
 
+// ── 편집 모드 ─────────────────────────────────────────────
+let editMode = false;
+let cachedPw = null; // 세션 중 한 번만 DB 조회
+
+function toggleEditMode() {
+  if (editMode) {
+    editMode = false;
+    applyEditMode();
+  } else {
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-error').textContent = '';
+    document.getElementById('pw-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('pw-input').focus(), 100);
+  }
+}
+
+async function confirmPassword() {
+  const val = document.getElementById('pw-input').value;
+
+  // 비밀번호 캐시 없으면 DB에서 가져오기
+  if (!cachedPw) {
+    const { data } = await sb.from('app_config').select('value').eq('key', 'edit_password').single();
+    cachedPw = data?.value || null;
+  }
+
+  if (val === cachedPw) {
+    editMode = true;
+    closePwModal();
+    applyEditMode();
+  } else {
+    document.getElementById('pw-error').textContent = '비밀번호가 틀렸어요.';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+function closePwModal() {
+  document.getElementById('pw-modal').classList.add('hidden');
+}
+
+function applyEditMode() {
+  const btn = document.getElementById('edit-mode-btn');
+  const icon = document.getElementById('edit-mode-icon');
+  const label = document.getElementById('edit-mode-label');
+
+  if (editMode) {
+    btn.classList.add('active');
+    icon.textContent = '🔓';
+    label.textContent = '편집 중';
+  } else {
+    btn.classList.remove('active');
+    icon.textContent = '🔒';
+    label.textContent = '편집';
+  }
+}
+
+function requireEdit(fn) {
+  if (!editMode) {
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-error').textContent = '';
+    document.getElementById('pw-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('pw-input').focus(), 100);
+    return false;
+  }
+  return true;
+}
+
 // ── 월별 메모 ─────────────────────────────────────────────
 let memoOriginal = '';
 
@@ -831,6 +964,7 @@ function onMemoInput() {
 }
 
 async function saveMemo() {
+  if (!requireEdit()) return;
   const key = getMemoKey();
   const content = document.getElementById('memo-textarea').value;
   document.getElementById('memo-save-btn').disabled = true;
@@ -842,11 +976,28 @@ async function saveMemo() {
 }
 
 // ── 시작 ─────────────────────────────────────────────────
+applyEditMode();
 trackVisit();
 checkPaymentBanner();
+loadWeather().then(() => renderCalendar());
 loadAll();
 renderVisitStats();
 </script>
+<!-- 비밀번호 모달 -->
+<div class="pw-modal-backdrop hidden" id="pw-modal">
+  <div class="pw-box">
+    <div class="pw-title">🔐 편집 모드</div>
+    <div class="pw-sub">멤버 전용 비밀번호를 입력하세요</div>
+    <input class="pw-input" type="password" id="pw-input" placeholder="비밀번호"
+      onkeydown="if(event.key==='Enter') confirmPassword()">
+    <div class="pw-error" id="pw-error"></div>
+    <div class="pw-btns">
+      <button class="pw-cancel" onclick="closePwModal()">취소</button>
+      <button class="pw-confirm" onclick="confirmPassword()">확인</button>
+    </div>
+  </div>
+</div>
+
 <!-- 메모 모달 -->
 <div class="modal-backdrop hidden" id="memo-modal" onclick="onBackdropClick(event)">
   <div class="modal-box">
