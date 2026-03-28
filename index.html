@@ -471,7 +471,7 @@ const WMO_ICON = {
 
 async function loadWeather() {
   try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16';
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.4784&longitude=126.9516&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16';
     const res = await fetch(url);
     const data = await res.json();
     weatherData = {};
@@ -554,7 +554,14 @@ function renderDetail() {
   const [y,mo,d] = selectedDate.split('-').map(Number);
   const dow = new Date(y, mo-1, d).getDay();
   dateEl.textContent = `${mo}월 ${d}일`;
-  dowEl.textContent = weekDaysFull[dow];
+
+  // 날씨 정보
+  const w = weatherData[selectedDate];
+  if (w) {
+    dowEl.innerHTML = `${weekDaysFull[dow]} &nbsp;${w.icon} ${w.max}°/${w.min}° &nbsp;<span style="color:#4472b8;">🌂${w.rain}%</span>`;
+  } else {
+    dowEl.textContent = weekDaysFull[dow];
+  }
 
   const dayData = events[selectedDate];
   const slots = dayData?.slots || [];
