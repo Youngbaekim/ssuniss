@@ -905,7 +905,7 @@ async function confirmPassword() {
   }
 
   if (val === cachedPw) {
-    editMode = true;
+    // editMode = true /* 🔒 비활성화 - 활성화하려면 앞의 // 제거 */;
     closePwModal();
     applyEditMode();
   } else {
