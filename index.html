@@ -882,7 +882,7 @@ function dismissPayBanner() {
 }
 function checkPaymentBanner() {
   const k = 'pay-hide-' + new Date().getFullYear() + '-' + (new Date().getMonth()+1);
-  if (localStorage.getItem(k)) { document.getElementById('pay-banner').style.display = 'none'; return; }
+  if (localStorage.getItem(k)) { document.getElementById('pay-banner').style.display='none'; return; }
   const now = new Date();
   const day = now.getDate();
   const hour = now.getHours();
