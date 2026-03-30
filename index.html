@@ -819,7 +819,7 @@ function renderMembersOverview() {
 
 // ── 방문자 기록 ───────────────────────────────────────────
 async function trackVisit() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
   await sb.rpc('upsert_visit', { visit_date: today });
 }
 
