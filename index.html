@@ -534,7 +534,7 @@ function renderCalendar() {
 async function prevMonth() {
   if (--currentMonth < 0) { currentMonth = 11; currentYear--; }
   selectedDate = null;
-  document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 예약자 메모`;
+  document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
   showLoading('불러오는 중...');
   await loadMonthData();
   hideLoading();
@@ -543,7 +543,7 @@ async function prevMonth() {
 async function nextMonth() {
   if (++currentMonth > 11) { currentMonth = 0; currentYear++; }
   selectedDate = null;
-  document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 예약자 메모`;
+  document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
   showLoading('불러오는 중...');
   await loadMonthData();
   hideLoading();
@@ -972,7 +972,7 @@ function getMemoKey() {
 async function openMemo() {
   const key = getMemoKey();
   const month = currentMonth + 1;
-  document.getElementById('memo-modal-title').textContent = `${month}월 예약자 메모`;
+  document.getElementById('memo-modal-title').textContent = `${month}월 메모`;
   document.getElementById('memo-modal').classList.remove('hidden');
   document.getElementById('memo-textarea').value = '불러오는 중...';
   document.getElementById('memo-save-btn').disabled = true;
