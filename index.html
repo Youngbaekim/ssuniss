@@ -199,6 +199,16 @@
   .pw-confirm { flex: 1; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   .pw-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
 </style>
+
+  <!-- PWA 메타태그 -->
+  <meta name="theme-color" content="#1a3a5c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="슈니스">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 </head>
 <body>
 
@@ -1022,5 +1032,28 @@ renderVisitStats();
   </div>
 </div>
 
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/ssuniss/service-worker.js")
+          .then(r => console.log("SW 등록:", r.scope))
+          .catch(e => console.error("SW 실패:", e));
+      });
+    }
+    let _pwaPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      _pwaPrompt = e;
+      if (window.matchMedia("(display-mode: standalone)").matches) return;
+      const b = document.createElement("div");
+      b.id = "pwa-banner";
+      b.innerHTML = '<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;font-family:-apple-system,sans-serif;font-size:14px;min-width:280px;max-width:360px"><span style="font-size:28px">🎾</span><div style="flex:1"><div style="font-weight:bold;margin-bottom:2px">슈니스 앱으로 설치하기</div><div style="opacity:.8;font-size:12px">홈 화면에 추가하면 더 빠르게 접근할 수 있어요!</div></div><div style="display:flex;flex-direction:column;gap:6px"><button id="pwa-install" style="background:#ccff00;color:#1a3a5c;border:none;border-radius:8px;padding:6px 14px;font-weight:bold;cursor:pointer;font-size:13px">설치</button><button id="pwa-later" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:12px">나중에</button></div></div>';
+      document.body.appendChild(b);
+      document.getElementById("pwa-install").onclick = async () => { _pwaPrompt.prompt(); await _pwaPrompt.userChoice; b.remove(); _pwaPrompt=null; };
+      document.getElementById("pwa-later").onclick = () => b.remove();
+    });
+    window.addEventListener("appinstalled", () => { const b=document.getElementById("pwa-banner"); if(b) b.remove(); });
+  </script>
 </body>
 </html>
