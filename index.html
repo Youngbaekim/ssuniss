@@ -520,7 +520,7 @@ function renderCalendar() {
     const members = events[ds]?.members || [];
     const w = weatherData[ds];
     let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + ((slots.length || members.length) ?' has-event':'');
-    const weatherHtml = w ? `<div class="weather-row"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : '';
+    const weatherHtml = w ? `<div class="weather-row" style="cursor:pointer" title="클릭하면 구글 날씨로 이동" onclick="event.stopPropagation();window.open('https://www.google.com/search?q=관악구+날씨','_blank')"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : '';
     let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court} ${e.start}</div>`).join('');
     if (slots.length > 2) chips += `<div class="event-chip" style="background:var(--surface2);color:var(--text-hint)">+${slots.length-2}개</div>`;
     html += `<div class="${cls}" onclick="selectDate('${ds}')"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><div class="day-num" style="margin-bottom:0;">${d}</div>${w ? `<div class="weather-row" style="margin-bottom:0;"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : ''}</div>${chips}</div>`;
