@@ -6,6 +6,9 @@
 <title>슈니스 일정</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-FRXFPKJ1CF"></script>
 <script>
+    // 🔑 비밀번호 요구 여부 (true = 비번 필요 / false = 누구나 편집 가능)
+    const REQUIRE_PASSWORD = true;
+
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -948,11 +951,13 @@ function applyEditMode() {
 
 function requireEdit(fn) {
   if (!editMode) {
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-error').textContent = '';
-    document.getElementById('pw-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('pw-input').focus(), 100);
-    return false;
+    if (REQUIRE_PASSWORD) {
+      document.getElementById('pw-modal').classList.remove('hidden');
+    } else {
+      editMode = true;
+      applyEditMode();
+    }
+    return;
   }
   return true;
 }
