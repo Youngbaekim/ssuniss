@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,13 +7,11 @@
 <title>슈니스 일정</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-FRXFPKJ1CF"></script>
 <script>
-    // 🔑 비밀번호 요구 여부 (true = 비번 필요 / false = 누구나 편집 가능)
     const REQUIRE_PASSWORD = true;
-
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FRXFPKJ1CF');
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FRXFPKJ1CF');
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -27,15 +26,11 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-  /* ── Loading overlay ── */
   #loading { position: fixed; inset: 0; background: rgba(45,106,79,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 16px; }
   #loading.hidden { display: none; }
   .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { color: white; font-size: 14px; font-weight: 500; }
-
-  /* ── Header ── */
   .header { background: var(--accent); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .header-title { color: white; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
   .header-title span { font-weight: 300; opacity: 0.75; margin-right: 6px; font-size: 13px; }
@@ -43,14 +38,8 @@
   .month-nav button { background: rgba(255,255,255,0.18); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
   .month-nav button:hover { background: rgba(255,255,255,0.3); }
   .month-label { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; min-width: 80px; text-align: center; }
-
-  /* ── Layout ── */
   .main { max-width: 1060px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
   @media (max-width: 780px) { .main { grid-template-columns: 1fr; padding: 12px 8px; } }
-  .calendar-wrap { overflow-x: auto; }
-  .cal-inner { min-width: 280px; }
-
-  /* ── Calendar ── */
   .calendar-wrap { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface2); border-bottom: 1px solid var(--border); }
   .cal-header div { text-align: center; padding: 10px 0; font-size: 11px; font-weight: 500; color: var(--text-sub); letter-spacing: 0.06em; }
@@ -74,35 +63,25 @@
   .event-chip.court-3 { background: #e8eaf6; color: #3949ab; }
   .event-chip.court-4 { background: var(--court4-light); color: var(--court4); }
   .event-chip.court-etc { background: #f1efe8; color: #5f5e5a; }
-
-  /* ── 날씨 ── */
   .weather-row { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; }
   .w-icon { font-size: 11px; line-height: 1; }
   .w-temp { font-size: 10px; color: var(--text-sub); font-weight: 500; }
   .w-rain { font-size: 9px; color: #4472b8; font-weight: 500; margin-left: 1px; }
-
-  /* ── Panel / Card ── */
   .panel { display: flex; flex-direction: column; gap: 16px; }
   .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .card-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .card-head h3 { font-size: 13px; font-weight: 600; }
   .card-head .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-light); color: var(--accent); font-weight: 500; }
   .card-body { padding: 14px 16px; }
-
-  /* ── Detail ── */
   .date-label { font-size: 22px; font-weight: 700; color: var(--accent); font-family: 'DM Mono', monospace; letter-spacing: -1px; margin-bottom: 2px; }
   .date-sub { font-size: 12px; color: var(--text-hint); margin-bottom: 14px; }
   .no-event { text-align: center; padding: 20px 0; color: var(--text-hint); font-size: 13px; }
-
-  /* ── Member chips ── */
   .member-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
   .member-chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; cursor: pointer; user-select: none; transition: background 0.13s, color 0.13s, border-color 0.13s, transform 0.1s; display: flex; align-items: center; gap: 5px; font-weight: 500; }
   .member-chip:active { transform: scale(0.95); }
   .member-chip.attending { background: var(--accent-light); border: 1.5px solid #8ecdb2; color: var(--accent); }
   .member-chip.absent { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text-hint); }
   .chip-icon { font-size: 10px; line-height: 1; }
-
-  /* ── Form ── */
   .add-event-form { display: flex; flex-direction: column; gap: 10px; }
   .form-row { display: flex; flex-direction: column; gap: 4px; }
   .form-label { font-size: 11px; color: var(--text-sub); font-weight: 500; letter-spacing: 0.04em; }
@@ -112,8 +91,6 @@
   .btn-primary { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: 600; transition: background 0.15s; width: 100%; }
   .btn-primary:hover { background: #235c40; }
   .btn-primary:disabled { background: var(--text-hint); cursor: not-allowed; }
-
-  /* ── Roster ── */
   .roster-hint { font-size: 11px; color: var(--text-hint); margin-bottom: 10px; }
   .roster-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .roster-chip { font-size: 12px; padding: 5px 10px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; gap: 5px; }
@@ -125,22 +102,17 @@
   .add-roster input:focus { border-color: var(--accent-mid); }
   .add-roster button { background: var(--accent); color: white; border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
   .add-roster button:hover { background: #235c40; }
-
-  /* ── Monthly stats ── */
   .member-row { display: flex; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); gap: 10px; }
   .member-row:last-child { border-bottom: none; }
   .member-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .member-name { font-size: 13px; font-weight: 500; }
   .member-count { font-size: 11px; color: var(--text-hint); }
   .member-events-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); font-weight: 500; margin-left: auto; }
-
   .legend { display: flex; gap: 12px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-sub); }
   .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
   .dot-1 { background: var(--accent-mid); } .dot-2 { background: var(--yellow); }
   .dot-3 { background: #5c6bc0; } .dot-4 { background: var(--court4); }
-
-  /* ── Slot rows ── */
   .slots-list { display: flex; flex-direction: column; gap: 6px; }
   .slot-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface2); transition: border-color 0.15s; }
   .slot-card.expanded { border-color: var(--accent-mid); }
@@ -166,8 +138,6 @@
   .edit-status-btn.active-paid    { background: #d1e7dd; color: #0a5c36; border-color: #52b788; }
   .edit-save-btn { background: var(--accent); color: white; border: none; border-radius: 6px; padding: 7px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
   .edit-save-btn:hover { background: #235c40; }
-
-  /* ── 메모 모달 ── */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .modal-backdrop.hidden { display: none; }
   .modal-box { background: var(--surface); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.18); width: 100%; max-width: 540px; overflow: hidden; }
@@ -184,12 +154,9 @@
   .btn-save:disabled { background: var(--text-hint); cursor: not-allowed; }
   .btn-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
   .btn-cancel:hover { background: var(--border); }
-
-  /* ── 편집 모드 ── */
   .edit-mode-btn { background: rgba(255,255,255,0.18); border: none; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; display: flex; align-items: center; gap: 5px; }
   .edit-mode-btn:hover { background: rgba(255,255,255,0.3); }
   .edit-mode-btn.active { background: #52b788; color: white; }
-  .readonly-mask { pointer-events: none; opacity: 0.5; user-select: none; }
   .pw-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: flex; align-items: center; justify-content: center; }
   .pw-modal-backdrop.hidden { display: none; }
   .pw-box { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
@@ -201,12 +168,8 @@
   .pw-btns { display: flex; gap: 8px; }
   .pw-confirm { flex: 1; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   .pw-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
-
-  /* 🔒 편집모드 비활성화 - 버튼 숨김 */
   #edit-mode-btn { display: none !important; }
 </style>
-
-  <!-- PWA 메타태그 -->
   <meta name="theme-color" content="#1a3a5c">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -218,7 +181,6 @@
 </head>
 <body>
 
-<!-- 로딩 오버레이 -->
 <div id="loading">
   <div class="loading-spinner"></div>
   <div class="loading-text">슈니스 불러오는 중...</div>
@@ -238,8 +200,7 @@
   </div>
 </div>
 
-<!-- 결제 알림 배너 -->
-<div id="pay-banner" style="display:none; background:#fff3cd; border-bottom:2px solid #ffc107; padding:12px 24px; display:none; align-items:center; justify-content:space-between; gap:12px;">
+<div id="pay-banner" style="display:none; background:#fff3cd; border-bottom:2px solid #ffc107; padding:12px 24px; align-items:center; justify-content:space-between; gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;">
     <span style="font-size:20px;">💳</span>
     <div>
@@ -248,12 +209,10 @@
     </div>
   </div>
   <button onclick="dismissPayBanner()" style="background:#fff3cd;border:1px solid #ffc107;cursor:pointer;font-size:11px;color:#856404;border-radius:6px;padding:3px 8px;flex-shrink:0;margin-right:4px">이번 달 알림 금지</button>
-    <button onclick="document.getElementById('pay-banner').style.display='none'"
-    style="background:none;border:none;cursor:pointer;font-size:18px;color:#856404;flex-shrink:0;padding:0 4px;">×</button>
+  <button onclick="document.getElementById('pay-banner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#856404;flex-shrink:0;padding:0 4px;">×</button>
 </div>
 
 <div class="main">
-  <!-- Left: Calendar -->
   <div>
     <div class="calendar-wrap">
       <div class="cal-header">
@@ -285,10 +244,9 @@
     </div>
   </div>
 
-  <!-- Right: Panel -->
   <div class="panel">
 
-    <!-- Detail -->
+    <!-- 일정 상세 -->
     <div class="card">
       <div class="card-head">
         <h3>일정 상세</h3>
@@ -303,7 +261,7 @@
       </div>
     </div>
 
-    <!-- Add event -->
+    <!-- 일정 추가 -->
     <div class="card">
       <div class="card-head"><h3>일정 추가</h3></div>
       <div class="card-body">
@@ -345,7 +303,7 @@
       </div>
     </div>
 
-    <!-- Monthly stats -->
+    <!-- 이달 참여 현황 -->
     <div class="card">
       <div class="card-head">
         <h3>이달 참여 현황</h3>
@@ -354,7 +312,18 @@
       <div class="card-body" id="members-overview" style="padding-top:6px;padding-bottom:6px;"></div>
     </div>
 
-    <!-- Master roster -->
+    <!-- 결제완료 현황 -->
+    <div class="card">
+      <div class="card-head">
+        <h3>💳 결제완료 현황</h3>
+        <span class="badge" id="paid-month-badge" style="background:#d1e7dd;color:#0a5c36;">0명</span>
+      </div>
+      <div class="card-body" id="paid-overview" style="padding-top:6px;padding-bottom:6px;">
+        <div style="text-align:center;padding:16px 0;font-size:13px;color:var(--text-hint);">이번 달 결제완료 내역이 없어요</div>
+      </div>
+    </div>
+
+    <!-- 전체 멤버 명단 -->
     <div class="card">
       <div class="card-head">
         <h3>전체 멤버 명단</h3>
@@ -385,18 +354,48 @@
   </div>
 </div>
 
+<!-- 비밀번호 모달 -->
+<div class="pw-modal-backdrop hidden" id="pw-modal">
+  <div class="pw-box">
+    <div class="pw-title">🔐 편집 모드</div>
+    <div class="pw-sub">멤버 전용 비밀번호를 입력하세요</div>
+    <input class="pw-input" type="password" id="pw-input" placeholder="비밀번호"
+      onkeydown="if(event.key==='Enter') confirmPassword()">
+    <div class="pw-error" id="pw-error"></div>
+    <div class="pw-btns">
+      <button class="pw-cancel" onclick="closePwModal()">취소</button>
+      <button class="pw-confirm" onclick="confirmPassword()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 메모 모달 -->
+<div class="modal-backdrop hidden" id="memo-modal" onclick="onBackdropClick(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="memo-modal-title">3월 메모</h3>
+      <button class="modal-close" onclick="closeMemo()">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="memo-textarea" id="memo-textarea" placeholder="예약자 이름, 특이사항 등 자유롭게 메모하세요." oninput="onMemoInput()"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeMemo()">닫기</button>
+      <button class="btn-save" id="memo-save-btn" onclick="saveMemo()" disabled>저장</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── Supabase 설정 ──────────────────────────────────────────
 const SUPABASE_URL = 'https://unlvmtixzhvzxfexynri.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHZtdGl4emh2enhmZXh5bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTMzMzQsImV4cCI6MjA4OTgyOTMzNH0.ZhATMOOT7fBg3iFcofXaWCF2tstV5rYka-Ae5R3YnF0';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── 상태 ───────────────────────────────────────────────────
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 let selectedDate = null;
 let masterRoster = [];
-let events = {}; // { 'YYYY-MM-DD': { members: [], slots: [] } }
+let events = {};
 
 const courtClass = { '1':'court-1','2':'court-2','3':'court-3','4':'court-4' };
 const courtColor = { '1':'#52b788','2':'#e07a00','3':'#5c6bc0','4':'#7c4dbd' };
@@ -404,7 +403,6 @@ function getCourtClass(c) { return courtClass[c] || 'court-etc'; }
 function getCourtColor(c) { return courtColor[c] || '#888780'; }
 const weekDaysFull = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
 
-// ── 로딩 ───────────────────────────────────────────────────
 function showLoading(msg='저장 중...') {
   document.querySelector('#loading .loading-text').textContent = msg;
   document.getElementById('loading').classList.remove('hidden');
@@ -413,15 +411,11 @@ function hideLoading() {
   document.getElementById('loading').classList.add('hidden');
 }
 
-// ── 초기 데이터 로드 ───────────────────────────────────────
 async function loadAll() {
   showLoading('슈니스 불러오는 중...');
   try {
-    // 멤버 명단
     const { data: rosterData } = await sb.from('roster').select('*').order('sort_order');
     masterRoster = rosterData.map(r => r.name);
-
-    // 이번 달 전후 데이터 로드
     await loadMonthData();
   } catch(e) {
     alert('데이터 로드 실패: ' + e.message);
@@ -437,12 +431,10 @@ async function loadMonthData() {
   const m = String(currentMonth + 1).padStart(2, '0');
   const from = `${y}-${m}-01`;
   const to   = `${y}-${m}-31`;
-
   const [{ data: schedData }, { data: slotData }] = await Promise.all([
     sb.from('schedules').select('*').gte('date', from).lte('date', to),
     sb.from('slots').select('*').gte('date', from).lte('date', to)
   ]);
-
   events = {};
   (schedData || []).forEach(s => {
     events[s.date] = { members: s.members || [], slots: [] };
@@ -457,14 +449,12 @@ async function loadMonthData() {
   });
 }
 
-// ── 기타코트 입력 토글 ────────────────────────────────────
 function toggleCustomCourt() {
   const val = document.getElementById('new-court').value;
   document.getElementById('custom-court-row').style.display = val === '기타' ? 'flex' : 'none';
   if (val === '기타') document.getElementById('custom-court-name').focus();
 }
 
-// ── 자동 종료 시간 ─────────────────────────────────────────
 function autoSetEnd() {
   const v = document.getElementById('new-start').value;
   if (!v) return;
@@ -473,19 +463,14 @@ function autoSetEnd() {
   document.getElementById('new-end').value = `${String(eh).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
-// ── 날씨 데이터 (Open-Meteo, 서울) ───────────────────────
+// ── 날씨 ──────────────────────────────────────────────────
 let weatherData = {};
-
 const WMO_ICON = {
-  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
-  45:'🌫️', 48:'🌫️',
-  51:'🌦️', 53:'🌦️', 55:'🌧️',
-  61:'🌧️', 63:'🌧️', 65:'🌧️',
-  71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
-  80:'🌦️', 81:'🌧️', 82:'⛈️',
-  85:'❄️', 86:'❄️', 95:'⛈️', 96:'⛈️', 99:'⛈️'
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',
+  71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
+  85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'
 };
-
 async function loadWeather() {
   try {
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.4784&longitude=126.9516&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16';
@@ -519,11 +504,10 @@ function renderCalendar() {
     const slots = events[ds]?.slots || [];
     const members = events[ds]?.members || [];
     const w = weatherData[ds];
-    let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + ((slots.length || members.length) ?' has-event':'');
-    const weatherHtml = w ? `<div class="weather-row" style="cursor:pointer" title="클릭하면 구글 날씨로 이동" onclick="event.stopPropagation();window.open('https://www.google.com/search?q=관악구+날씨','_blank')"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : '';
-    let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court} ${e.start}</div>`).join('');
+    let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + ((slots.length||members.length)?' has-event':'');
+    let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court)?e.court+'코트':e.court} ${e.start}</div>`).join('');
     if (slots.length > 2) chips += `<div class="event-chip" style="background:var(--surface2);color:var(--text-hint)">+${slots.length-2}개</div>`;
-    html += `<div class="${cls}" onclick="selectDate('${ds}')"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><div class="day-num" style="margin-bottom:0;">${d}</div>${w ? `<div class="weather-row" style="margin-bottom:0;"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain >= 40 ? `<span class="w-rain">${w.rain}%</span>` : ''}</div>` : ''}</div>${chips}</div>`;
+    html += `<div class="${cls}" onclick="selectDate('${ds}')"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><div class="day-num" style="margin-bottom:0;">${d}</div>${w?`<div class="weather-row" style="margin-bottom:0;"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain>=40?`<span class="w-rain">${w.rain}%</span>`:''}</div>`:''}</div>${chips}</div>`;
   }
   const rem = (firstDay + daysInMonth) % 7;
   if (rem) for (let i = 0; i < 7 - rem; i++) html += `<div class="cal-day empty"></div>`;
@@ -562,7 +546,6 @@ function renderDetail() {
   const dowEl  = document.getElementById('detail-dow');
   const detailEl = document.getElementById('events-detail');
   const badge  = document.getElementById('event-count-badge');
-
   if (!selectedDate) {
     dateEl.textContent = '날짜를 선택하세요'; dowEl.textContent = ''; badge.textContent = '0개';
     detailEl.innerHTML = '<div class="no-event">날짜를 클릭하면 일정을 확인하고<br>참여자를 관리할 수 있어요.</div>';
@@ -571,46 +554,37 @@ function renderDetail() {
   const [y,mo,d] = selectedDate.split('-').map(Number);
   const dow = new Date(y, mo-1, d).getDay();
   dateEl.textContent = `${mo}월 ${d}일`;
-
-  // 날씨 정보
   const w = weatherData[selectedDate];
   if (w) {
-  dowEl.innerHTML = `${weekDaysFull[dow]} &nbsp;<span onclick="window.open('https://www.google.com/search?q=관악구+날씨','_blank')" style="cursor:pointer;" title="클릭하면 구글 날씨로 이동">${w.icon} ${w.max}°/${w.min}° &nbsp;<span style="color:#4472b8;">🌂${w.rain}%</span></span>`;
-} else {
-  dowEl.textContent = weekDaysFull[dow];
-}
-
+    dowEl.innerHTML = `${weekDaysFull[dow]} &nbsp;<span onclick="window.open('https://www.google.com/search?q=관악구+날씨','_blank')" style="cursor:pointer;" title="클릭하면 구글 날씨로 이동">${w.icon} ${w.max}°/${w.min}° &nbsp;<span style="color:#4472b8;">🌂${w.rain}%</span></span>`;
+  } else {
+    dowEl.textContent = weekDaysFull[dow];
+  }
   const dayData = events[selectedDate];
   const slots = dayData?.slots || [];
   badge.textContent = `${slots.length}개`;
-
   const attending = dayData?.members || [];
   const memberChips = masterRoster.map(name => {
     const isAttending = attending.includes(name);
-    return `<div class="member-chip ${isAttending?'attending':'absent'}" onclick="toggleMember('${selectedDate}','${name}')">
-      ${isAttending ? '<span class="chip-icon">✓</span>' : ''}${name}
-    </div>`;
+    return `<div class="member-chip ${isAttending?'attending':'absent'}" onclick="toggleMember('${selectedDate}','${name}')">${isAttending?'<span class="chip-icon">✓</span>':''}${name}</div>`;
   }).join('');
   const attendCount = attending.filter(n => masterRoster.includes(n)).length;
-
   const slotSection = slots.length ? `
     <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin:14px 0 6px;">코트 일정 (${slots.length}개)</div>
     <div class="slots-list">${slots.map(e => {
-      const statusCls = e.status==='paid' ? 'status-paid' : 'status-pending';
-      const statusLabel = e.status==='paid' ? '결제완료' : '예약완료';
-      return `
-      <div class="slot-card" id="slot-card-${e.id}">
+      const statusCls = e.status==='paid'?'status-paid':'status-pending';
+      const statusLabel = e.status==='paid'?'결제완료':'예약완료';
+      return `<div class="slot-card" id="slot-card-${e.id}">
         <div class="slot-row" onclick="toggleSlotEdit(${e.id})">
           <div class="court-dot" style="width:10px;height:10px;border-radius:50%;background:${getCourtColor(e.court)};flex-shrink:0;"></div>
-          <span class="slot-court">${['1','2','3','4'].includes(e.court) ? e.court+'코트' : e.court}</span>
+          <span class="slot-court">${['1','2','3','4'].includes(e.court)?e.court+'코트':e.court}</span>
           <span class="slot-time">${e.start} – ${e.end}</span>
           <span class="status-badge ${statusCls}">${statusLabel}</span>
-          ${e.memo ? `<span class="slot-memo">📝 ${e.memo}</span>` : '<span class="slot-memo"></span>'}
+          ${e.memo?`<span class="slot-memo">📝 ${e.memo}</span>`:'<span class="slot-memo"></span>'}
           <button onclick="event.stopPropagation();deleteSlot('${selectedDate}',${e.id})" class="slot-del" title="삭제">×</button>
         </div>
         <div class="slot-edit" id="slot-edit-${e.id}">
-          <div>
-            <div class="edit-label">상태</div>
+          <div><div class="edit-label">상태</div>
             <div class="edit-status-row">
               <button class="edit-status-btn ${e.status==='pending'?'active-pending':''}" id="btn-pending-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'pending')">예약완료</button>
               <button class="edit-status-btn ${e.status==='paid'?'active-paid':''}" id="btn-paid-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'paid')">결제완료</button>
@@ -625,7 +599,6 @@ function renderDetail() {
       </div>`;
     }).join('')}</div>
   ` : `<div style="font-size:11px;color:var(--text-hint);margin-top:14px;padding:10px;background:var(--surface2);border-radius:7px;text-align:center;">코트 일정이 없어요. 아래에서 추가할 수 있어요.</div>`;
-
   detailEl.innerHTML = `
     <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:8px;">참여자 (${attendCount}/${masterRoster.length}명) — 클릭으로 참여/불참 전환</div>
     <div class="member-grid">${memberChips}</div>
@@ -633,22 +606,17 @@ function renderDetail() {
   `;
 }
 
-// ── 참여자 토글 ───────────────────────────────────────────
 async function toggleMember(dateStr, name) {
   if (!requireEdit()) return;
   if (!events[dateStr]) events[dateStr] = { members: [], slots: [] };
   const members = events[dateStr].members;
   const idx = members.indexOf(name);
   if (idx === -1) members.push(name); else members.splice(idx, 1);
-
   renderDetail();
   renderMembersOverview();
-
-  // DB 저장
   await sb.from('schedules').upsert({ date: dateStr, members }, { onConflict: 'date' });
 }
 
-// ── 일정 추가 ─────────────────────────────────────────────
 async function addEvent() {
   if (!requireEdit()) return;
   const date  = document.getElementById('new-date').value;
@@ -659,36 +627,27 @@ async function addEvent() {
     court = document.getElementById('custom-court-name').value.trim();
     if (!court) { alert('코트명을 입력해주세요.'); return; }
   }
-  const memo  = document.getElementById('new-memo').value;
+  const memo = document.getElementById('new-memo').value;
   if (!date) { alert('날짜를 선택해주세요.'); return; }
   if (start >= end) { alert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
-
   const btn = document.getElementById('add-btn');
   btn.disabled = true;
   showLoading('일정 저장 중...');
-
   try {
-    // schedules 행 먼저 확보
     await sb.from('schedules').upsert({ date, members: events[date]?.members || [] }, { onConflict: 'date' });
-
-    // slot 추가
     const { data } = await sb.from('slots').insert({
       date, court, start_time: start, end_time: end, memo, status: 'pending'
     }).select().single();
-
     if (!events[date]) events[date] = { members: [], slots: [] };
     events[date].slots.push({ id: data.id, court, start, end, memo, status: 'pending' });
-
     selectedDate = date;
     document.getElementById('new-memo').value = '';
     renderCalendar(); renderDetail();
   } catch(e) { alert('저장 실패: ' + e.message); }
-
   hideLoading();
   btn.disabled = false;
 }
 
-// ── 슬롯 삭제 ─────────────────────────────────────────────
 async function deleteSlot(dateStr, id) {
   if (!requireEdit()) return;
   if (!confirm('이 코트 일정을 삭제할까요?')) return;
@@ -706,7 +665,6 @@ async function deleteSlot(dateStr, id) {
   renderCalendar(); renderDetail();
 }
 
-// ── 슬롯 편집 ─────────────────────────────────────────────
 function toggleSlotEdit(id) {
   document.getElementById(`slot-card-${id}`).classList.toggle('expanded');
 }
@@ -723,6 +681,7 @@ async function setSlotStatus(dateStr, id, status) {
   if (btnPaid) btnPaid.className = 'edit-status-btn' + (status==='paid'?' active-paid':'');
   const badge = document.querySelector(`#slot-card-${id} .status-badge`);
   if (badge) { badge.className = `status-badge ${status==='paid'?'status-paid':'status-pending'}`; badge.textContent = status==='paid'?'결제완료':'예약완료'; }
+  renderPaidOverview();
 }
 
 function autoEditEnd(id) {
@@ -746,7 +705,6 @@ async function saveSlotEdit(dateStr, id) {
   renderDetail(); renderCalendar();
 }
 
-// ── 멤버 명단 ─────────────────────────────────────────────
 function getMonthlyCount(name) {
   const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
   return Object.entries(events).filter(([d, day]) => d.startsWith(monthStr) && day.members.includes(name)).length;
@@ -792,7 +750,6 @@ async function deleteRosterMember(name) {
   renderRoster(); renderDetail(); renderCalendar();
 }
 
-// ── 이달 참여 현황 ────────────────────────────────────────
 function renderMembersOverview() {
   const container = document.getElementById('members-overview');
   const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
@@ -815,36 +772,67 @@ function renderMembersOverview() {
     </div>
   `).join('');
   renderRoster();
+  renderPaidOverview();
 }
 
-// ── 방문자 기록 ───────────────────────────────────────────
+// ── 결제완료 현황 ─────────────────────────────────────────
+function renderPaidOverview() {
+  const container = document.getElementById('paid-overview');
+  const badge = document.getElementById('paid-month-badge');
+  const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+
+  // 예약자(메모) 기준으로 집계
+  const paidByMemo = {};
+  Object.entries(events).forEach(([date, day]) => {
+    if (!date.startsWith(monthStr)) return;
+    (day.slots || []).forEach(slot => {
+      if (slot.status !== 'paid') return;
+      const payer = (slot.memo || '').trim() || '(미입력)';
+      paidByMemo[payer] = (paidByMemo[payer] || 0) + 1;
+    });
+  });
+
+  const entries = Object.entries(paidByMemo).sort((a,b) => b[1]-a[1]);
+  badge.textContent = `${entries.length}명`;
+
+  if (!entries.length) {
+    container.innerHTML = '<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint);">이번 달 결제완료 내역이 없어요</div>';
+    return;
+  }
+
+  // 컴팩트 인라인 레이아웃: 김태연 2회 · 임선영 1회
+  container.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
+      ${entries.map(([name, cnt]) =>
+        `<span style="font-size:12px;color:var(--text-sub);">
+          <span style="font-weight:600;color:#0a5c36;">${name}</span>
+          <span style="font-family:'DM Mono',monospace;color:#0a5c36;margin-left:3px;">${cnt}회</span>
+        </span>`
+      ).join('<span style="color:var(--border);font-size:12px;">│</span>')}
+    </div>
+  `;
+}
+
 async function trackVisit() {
   const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
   await sb.rpc('upsert_visit', { visit_date: today });
 }
 
-// ── 방문자 통계 렌더링 ────────────────────────────────────
 async function renderVisitStats() {
   const { data } = await sb.from('visits').select('*').order('visited_at', { ascending: false });
   if (!data || !data.length) {
     document.getElementById('visit-stats').innerHTML = '<div style="text-align:center;font-size:13px;color:var(--text-hint);">아직 데이터가 없어요</div>';
     return;
   }
-
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date(Date.now() + 9*60*60*1000).toISOString().split('T')[0];
   const monthStr = today.slice(0, 7);
-
-  const todayRow  = data.find(r => r.visited_at === today);
+  const todayRow = data.find(r => r.visited_at === today);
   const todayCount = todayRow ? todayRow.count : 0;
   const monthCount = data.filter(r => r.visited_at.startsWith(monthStr)).reduce((s, r) => s + r.count, 0);
   const totalCount = data.reduce((s, r) => s + r.count, 0);
-
   document.getElementById('visit-total-badge').textContent = `총 ${totalCount.toLocaleString()}회`;
-
-  // 최근 7일
   const recentRows = data.slice(0, 7);
   const maxCount = Math.max(...recentRows.map(r => r.count), 1);
-
   document.getElementById('visit-stats').innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
       <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
@@ -868,7 +856,7 @@ async function renderVisitStats() {
         return `<div style="display:flex;align-items:center;gap:8px;">
           <div style="font-size:11px;color:var(--text-hint);font-family:'DM Mono',monospace;min-width:36px;">${dateLabel}</div>
           <div style="flex:1;background:var(--surface2);border-radius:4px;height:14px;overflow:hidden;">
-            <div style="width:${pct}%;background:var(--accent-mid);height:100%;border-radius:4px;transition:width 0.4s;"></div>
+            <div style="width:${pct}%;background:var(--accent-mid);height:100%;border-radius:4px;"></div>
           </div>
           <div style="font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace;min-width:24px;text-align:right;">${r.count}</div>
         </div>`;
@@ -877,7 +865,6 @@ async function renderVisitStats() {
   `;
 }
 
-// ── 결제 알림 배너 ────────────────────────────────────────
 function dismissPayBanner() {
   const k = 'pay-hide-' + new Date().getFullYear() + '-' + (new Date().getMonth()+1);
   localStorage.setItem(k, '1');
@@ -885,23 +872,20 @@ function dismissPayBanner() {
 }
 function checkPaymentBanner() {
   const k = 'pay-hide-' + new Date().getFullYear() + '-' + (new Date().getMonth()+1);
-  if (localStorage.getItem(k)) { document.getElementById('pay-banner').style.display='none'; return; }
+  if (localStorage.getItem(k)) return;
   const now = new Date();
-  const day = now.getDate();
-  const hour = now.getHours();
+  const day = now.getDate(), hour = now.getHours();
   const show = (day === 18 && hour >= 10) || (day > 18 && day < 22) || (day === 22 && hour < 9);
   if (show) document.getElementById('pay-banner').style.display = 'flex';
 }
 
 // ── 편집 모드 ─────────────────────────────────────────────
 let editMode = false;
-let cachedPw = null; // 세션 중 한 번만 DB 조회
+let cachedPw = null;
 
 function toggleEditMode() {
-  if (editMode) {
-    editMode = false;
-    applyEditMode();
-  } else {
+  if (editMode) { editMode = false; applyEditMode(); }
+  else {
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-error').textContent = '';
     document.getElementById('pw-modal').classList.remove('hidden');
@@ -911,17 +895,12 @@ function toggleEditMode() {
 
 async function confirmPassword() {
   const val = document.getElementById('pw-input').value;
-
-  // 비밀번호 캐시 없으면 DB에서 가져오기
   if (!cachedPw) {
     const { data } = await sb.from('app_config').select('value').eq('key', 'edit_password').single();
     cachedPw = data?.value || null;
   }
-
   if (val === cachedPw) {
-    editMode = true;
-    closePwModal();
-    applyEditMode();
+    editMode = true; closePwModal(); applyEditMode();
   } else {
     document.getElementById('pw-error').textContent = '비밀번호가 틀렸어요.';
     document.getElementById('pw-input').value = '';
@@ -929,71 +908,51 @@ async function confirmPassword() {
   }
 }
 
-function closePwModal() {
-  document.getElementById('pw-modal').classList.add('hidden');
-}
+function closePwModal() { document.getElementById('pw-modal').classList.add('hidden'); }
 
 function applyEditMode() {
   const btn = document.getElementById('edit-mode-btn');
   const icon = document.getElementById('edit-mode-icon');
   const label = document.getElementById('edit-mode-label');
-
-  if (editMode) {
-    btn.classList.add('active');
-    icon.textContent = '🔓';
-    label.textContent = '편집 중';
-  } else {
-    btn.classList.remove('active');
-    icon.textContent = '🔒';
-    label.textContent = '편집';
-  }
+  if (editMode) { btn.classList.add('active'); icon.textContent = '🔓'; label.textContent = '편집 중'; }
+  else { btn.classList.remove('active'); icon.textContent = '🔒'; label.textContent = '편집'; }
 }
 
-function requireEdit(fn) {
+function requireEdit() {
   if (!editMode) {
     if (REQUIRE_PASSWORD) {
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-error').textContent = '';
       document.getElementById('pw-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('pw-input').focus(), 100);
     } else {
-      editMode = true;
-      applyEditMode();
+      editMode = true; applyEditMode();
     }
-    return;
+    return false;
   }
   return true;
 }
 
 // ── 월별 메모 ─────────────────────────────────────────────
 let memoOriginal = '';
-
-function getMemoKey() {
-  return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-}
+function getMemoKey() { return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`; }
 
 async function openMemo() {
   const key = getMemoKey();
-  const month = currentMonth + 1;
-  document.getElementById('memo-modal-title').textContent = `${month}월 메모`;
+  document.getElementById('memo-modal-title').textContent = `${currentMonth+1}월 메모`;
   document.getElementById('memo-modal').classList.remove('hidden');
   document.getElementById('memo-textarea').value = '불러오는 중...';
   document.getElementById('memo-save-btn').disabled = true;
-
   const { data } = await sb.from('memos').select('content').eq('month_key', key).single();
   memoOriginal = data?.content || '';
   document.getElementById('memo-textarea').value = memoOriginal;
   document.getElementById('memo-textarea').focus();
 }
 
-function closeMemo() {
-  document.getElementById('memo-modal').classList.add('hidden');
-}
-
-function onBackdropClick(e) {
-  if (e.target === document.getElementById('memo-modal')) closeMemo();
-}
-
+function closeMemo() { document.getElementById('memo-modal').classList.add('hidden'); }
+function onBackdropClick(e) { if (e.target === document.getElementById('memo-modal')) closeMemo(); }
 function onMemoInput() {
-  const current = document.getElementById('memo-textarea').value;
-  document.getElementById('memo-save-btn').disabled = (current === memoOriginal);
+  document.getElementById('memo-save-btn').disabled = (document.getElementById('memo-textarea').value === memoOriginal);
 }
 
 async function saveMemo() {
@@ -1004,8 +963,7 @@ async function saveMemo() {
   showLoading('메모 저장 중...');
   await sb.from('memos').upsert({ month_key: key, content }, { onConflict: 'month_key' });
   memoOriginal = content;
-  hideLoading();
-  closeMemo();
+  hideLoading(); closeMemo();
 }
 
 // ── 시작 ─────────────────────────────────────────────────
@@ -1016,60 +974,47 @@ loadWeather().then(() => renderCalendar());
 loadAll();
 renderVisitStats();
 </script>
-<!-- 비밀번호 모달 -->
-<div class="pw-modal-backdrop hidden" id="pw-modal">
-  <div class="pw-box">
-    <div class="pw-title">🔐 편집 모드</div>
-    <div class="pw-sub">멤버 전용 비밀번호를 입력하세요</div>
-    <input class="pw-input" type="password" id="pw-input" placeholder="비밀번호"
-      onkeydown="if(event.key==='Enter') confirmPassword()">
-    <div class="pw-error" id="pw-error"></div>
-    <div class="pw-btns">
-      <button class="pw-cancel" onclick="closePwModal()">취소</button>
-      <button class="pw-confirm" onclick="confirmPassword()">확인</button>
-    </div>
-  </div>
-</div>
 
-<!-- 메모 모달 -->
-<div class="modal-backdrop hidden" id="memo-modal" onclick="onBackdropClick(event)">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3 id="memo-modal-title">3월 예약자 메모</h3>
-      <button class="modal-close" onclick="closeMemo()">×</button>
-    </div>
-    <div class="modal-body">
-      <textarea class="memo-textarea" id="memo-textarea" placeholder="예약자 이름, 특이사항 등 자유롭게 메모하세요." oninput="onMemoInput()"></textarea>
-    </div>
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeMemo()">닫기</button>
-      <button class="btn-save" id="memo-save-btn" onclick="saveMemo()" disabled>저장</button>
-    </div>
-  </div>
-</div>
-
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/ssuniss/service-worker.js")
-          .then(r => console.log("SW 등록:", r.scope))
-          .catch(e => console.error("SW 실패:", e));
-      });
-    }
-    let _pwaPrompt = null;
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      _pwaPrompt = e;
-      if (window.matchMedia("(display-mode: standalone)").matches) return;
-      const b = document.createElement("div");
-      b.id = "pwa-banner";
-      b.innerHTML = '<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;font-family:-apple-system,sans-serif;font-size:14px;min-width:280px;max-width:360px"><span style="font-size:28px">🎾</span><div style="flex:1"><div style="font-weight:bold;margin-bottom:2px">슈니스 앱으로 설치하기</div><div style="opacity:.8;font-size:12px">홈 화면에 추가하면 더 빠르게 접근할 수 있어요!</div></div><div style="display:flex;flex-direction:column;gap:6px"><button id="pwa-install" style="background:#ccff00;color:#1a3a5c;border:none;border-radius:8px;padding:6px 14px;font-weight:bold;cursor:pointer;font-size:13px">설치</button><button id="pwa-later" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:12px">나중에</button></div></div>';
-      document.body.appendChild(b);
-      document.getElementById("pwa-install").onclick = async () => { _pwaPrompt.prompt(); await _pwaPrompt.userChoice; b.remove(); _pwaPrompt=null; };
-      document.getElementById("pwa-later").onclick = () => b.remove();
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/ssuniss/service-worker.js")
+        .then(r => console.log("SW 등록:", r.scope))
+        .catch(e => console.error("SW 실패:", e));
     });
-    window.addEventListener("appinstalled", () => { const b=document.getElementById("pwa-banner"); if(b) b.remove(); });
-  </script>
+  }
+
+  // ── iOS 홈 화면 추가 안내 ──
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isIOS && !isStandalone && !localStorage.getItem('ios-pwa-dismissed')) {
+    const b = document.createElement('div');
+    b.innerHTML = `<div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.35);z-index:9999;font-family:-apple-system,sans-serif;font-size:13px;min-width:280px;max-width:340px;">
+      <span style="font-size:26px;flex-shrink:0;">🎾</span>
+      <div style="flex:1;line-height:1.6;">
+        <div style="font-weight:700;margin-bottom:4px;">홈 화면에 추가하기</div>
+        <div style="opacity:.8;font-size:12px;">Safari 하단 <span style="background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-weight:600;">공유 □↑</span> 버튼 →<br><strong>"홈 화면에 추가"</strong> 탭하세요</div>
+      </div>
+      <button onclick="localStorage.setItem('ios-pwa-dismissed','1');this.closest('div').parentElement.remove();" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:22px;padding:0;line-height:1;align-self:flex-start;flex-shrink:0;">×</button>
+    </div>`;
+    document.body.appendChild(b);
+    setTimeout(() => { if (b.parentElement) b.remove(); }, 15000);
+  }
+
+  // ── Android 설치 프롬프트 ──
+  let _pwaPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    _pwaPrompt = e;
+    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    const b = document.createElement("div");
+    b.id = "pwa-banner";
+    b.innerHTML = '<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;font-family:-apple-system,sans-serif;font-size:14px;min-width:280px;max-width:360px"><span style="font-size:28px">🎾</span><div style="flex:1"><div style="font-weight:bold;margin-bottom:2px">슈니스 앱으로 설치하기</div><div style="opacity:.8;font-size:12px">홈 화면에 추가하면 더 빠르게 접근할 수 있어요!</div></div><div style="display:flex;flex-direction:column;gap:6px"><button id="pwa-install" style="background:#ccff00;color:#1a3a5c;border:none;border-radius:8px;padding:6px 14px;font-weight:bold;cursor:pointer;font-size:13px">설치</button><button id="pwa-later" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:12px">나중에</button></div></div>';
+    document.body.appendChild(b);
+    document.getElementById("pwa-install").onclick = async () => { _pwaPrompt.prompt(); await _pwaPrompt.userChoice; b.remove(); _pwaPrompt=null; };
+    document.getElementById("pwa-later").onclick = () => b.remove();
+  });
+  window.addEventListener("appinstalled", () => { const b=document.getElementById("pwa-banner"); if(b) b.remove(); });
+</script>
 </body>
 </html>
