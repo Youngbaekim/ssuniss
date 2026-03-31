@@ -1,1078 +1,348 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>슈니스 일정</title>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FRXFPKJ1CF"></script>
-<script>
-    const REQUIRE_PASSWORD = true;
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-FRXFPKJ1CF');
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --bg: #f5f2eb; --surface: #ffffff; --surface2: #faf8f4;
-    --border: #e0dbd0; --text: #1a1a1a; --text-sub: #6b6560; --text-hint: #a8a39a;
-    --accent: #2d6a4f; --accent-light: #d8ede4; --accent-mid: #52b788;
-    --red: #c1440e; --yellow: #e07a00; --yellow-light: #fef3d6;
-    --court4: #7c4dbd; --court4-light: #ede8f8;
-    --radius: 12px; --shadow: 0 2px 12px rgba(0,0,0,0.07);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  #loading { position: fixed; inset: 0; background: rgba(45,106,79,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 16px; }
-  #loading.hidden { display: none; }
-  .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { color: white; font-size: 14px; font-weight: 500; }
-  .header { background: var(--accent); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  .header-title { color: white; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
-  .header-title span { font-weight: 300; opacity: 0.75; margin-right: 6px; font-size: 13px; }
-  .month-nav { display: flex; align-items: center; gap: 12px; color: white; }
-  .month-nav button { background: rgba(255,255,255,0.18); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-  .month-nav button:hover { background: rgba(255,255,255,0.3); }
-  .month-label { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; min-width: 80px; text-align: center; }
-  .main { max-width: 1060px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
-  @media (max-width: 780px) { .main { grid-template-columns: 1fr; padding: 12px 8px; } }
-  .calendar-wrap { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface2); border-bottom: 1px solid var(--border); }
-  .cal-header div { text-align: center; padding: 10px 0; font-size: 11px; font-weight: 500; color: var(--text-sub); letter-spacing: 0.06em; }
-  .cal-header div:first-child { color: var(--red); }
-  .cal-header div:last-child { color: #4472b8; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  .cal-day { min-height: 72px; padding: 6px 4px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; overflow: hidden; min-width: 0; }
-  .cal-day:nth-child(7n) { border-right: none; }
-  .cal-day:hover { background: var(--accent-light); }
-  .cal-day.empty { background: var(--surface2); cursor: default; }
-  .cal-day.empty:hover { background: var(--surface2); }
-  .cal-day.today .day-num { background: var(--accent); color: white; border-radius: 50%; }
-  .cal-day.selected { background: #edf7f2; }
-  .cal-day.has-event .day-num::after { content: ''; display: block; width: 4px; height: 4px; background: var(--accent-mid); border-radius: 50%; margin: 1px auto 0; }
-  .day-num { font-size: 12px; font-weight: 500; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 3px; flex-shrink: 0; }
-  .cal-day.sun .day-num { color: var(--red); }
-  .cal-day.sat .day-num { color: #4472b8; }
-  .event-chip { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; max-width: 100%; display: block; }
-  .event-chip.court-1 { background: var(--accent-light); color: var(--accent); }
-  .event-chip.court-2 { background: var(--yellow-light); color: var(--yellow); }
-  .event-chip.court-3 { background: #e8eaf6; color: #3949ab; }
-  .event-chip.court-4 { background: var(--court4-light); color: var(--court4); }
-  .event-chip.court-etc { background: #f1efe8; color: #5f5e5a; }
-  .weather-row { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; }
-  .w-icon { font-size: 11px; line-height: 1; }
-  .w-temp { font-size: 10px; color: var(--text-sub); font-weight: 500; }
-  .w-rain { font-size: 9px; color: #4472b8; font-weight: 500; margin-left: 1px; }
-  .panel { display: flex; flex-direction: column; gap: 16px; }
-  .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .card-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .card-head h3 { font-size: 13px; font-weight: 600; }
-  .card-head .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-light); color: var(--accent); font-weight: 500; }
-  .card-body { padding: 14px 16px; }
-  .date-label { font-size: 22px; font-weight: 700; color: var(--accent); font-family: 'DM Mono', monospace; letter-spacing: -1px; margin-bottom: 2px; }
-  .date-sub { font-size: 12px; color: var(--text-hint); margin-bottom: 14px; }
-  .no-event { text-align: center; padding: 20px 0; color: var(--text-hint); font-size: 13px; }
-  .member-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
-  .member-chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; cursor: pointer; user-select: none; transition: background 0.13s, color 0.13s, border-color 0.13s, transform 0.1s; display: flex; align-items: center; gap: 5px; font-weight: 500; }
-  .member-chip:active { transform: scale(0.95); }
-  .member-chip.attending { background: var(--accent-light); border: 1.5px solid #8ecdb2; color: var(--accent); }
-  .member-chip.absent { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text-hint); }
-  .chip-icon { font-size: 10px; line-height: 1; }
-  .add-event-form { display: flex; flex-direction: column; gap: 10px; }
-  .form-row { display: flex; flex-direction: column; gap: 4px; }
-  .form-label { font-size: 11px; color: var(--text-sub); font-weight: 500; letter-spacing: 0.04em; }
-  .form-input, .form-select { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface2); color: var(--text); outline: none; width: 100%; transition: border-color 0.15s; }
-  .form-input:focus, .form-select:focus { border-color: var(--accent-mid); }
-  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .btn-primary { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: 600; transition: background 0.15s; width: 100%; }
-  .btn-primary:hover { background: #235c40; }
-  .btn-primary:disabled { background: var(--text-hint); cursor: not-allowed; }
-  .roster-hint { font-size: 11px; color: var(--text-hint); margin-bottom: 10px; }
-  .roster-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-  .roster-chip { font-size: 12px; padding: 5px 10px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; gap: 5px; }
-  .roster-chip .del-btn { background: none; border: none; color: var(--text-hint); cursor: pointer; font-size: 13px; line-height: 1; padding: 0; transition: color 0.12s; }
-  .roster-chip .del-btn:hover { color: var(--red); }
-  .del-btn-disabled { color: var(--text-hint); font-size: 14px; opacity: 0.3; cursor: default; }
-  .add-roster { display: flex; gap: 6px; }
-  .add-roster input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface2); color: var(--text); outline: none; transition: border-color 0.15s; }
-  .add-roster input:focus { border-color: var(--accent-mid); }
-  .add-roster button { background: var(--accent); color: white; border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
-  .add-roster button:hover { background: #235c40; }
-  .member-row { display: flex; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); gap: 10px; }
-  .member-row:last-child { border-bottom: none; }
-  .member-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-  .member-name { font-size: 13px; font-weight: 500; }
-  .member-count { font-size: 11px; color: var(--text-hint); }
-  .member-events-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); font-weight: 500; margin-left: auto; }
-  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-sub); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .dot-1 { background: var(--accent-mid); } .dot-2 { background: var(--yellow); }
-  .dot-3 { background: #5c6bc0; } .dot-4 { background: var(--court4); }
-  .slots-list { display: flex; flex-direction: column; gap: 6px; }
-  .slot-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface2); transition: border-color 0.15s; }
-  .slot-card.expanded { border-color: var(--accent-mid); }
-  .slot-row { display: flex; align-items: center; gap: 7px; padding: 8px 10px; cursor: pointer; user-select: none; transition: background 0.12s; }
-  .slot-row:hover { background: var(--accent-light); }
-  .slot-court { font-size: 13px; font-weight: 600; }
-  .slot-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-sub); }
-  .slot-memo { font-size: 11px; color: var(--text-hint); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .slot-del { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 15px; line-height: 1; padding: 2px 4px; margin-left: auto; transition: color 0.12s; flex-shrink: 0; border-radius: 4px; }
-  .slot-del:hover { color: var(--red); }
-  .status-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.02em; flex-shrink: 0; }
-  .status-pending { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
-  .status-paid    { background: #d1e7dd; color: #0a5c36; border: 1px solid #52b788; }
-  .slot-edit { padding: 10px 12px 12px; border-top: 1px solid var(--border); background: var(--surface); display: none; flex-direction: column; gap: 8px; }
-  .slot-card.expanded .slot-edit { display: flex; }
-  .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .edit-label { font-size: 10px; color: var(--text-sub); font-weight: 500; margin-bottom: 3px; letter-spacing: 0.04em; }
-  .edit-time { border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; font-size: 12px; font-family: 'DM Mono', monospace; background: var(--surface2); color: var(--text); outline: none; width: 100%; transition: border-color 0.15s; }
-  .edit-time:focus { border-color: var(--accent-mid); }
-  .edit-status-row { display: flex; gap: 6px; }
-  .edit-status-btn { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif; }
-  .edit-status-btn.active-pending { background: #fff3cd; color: #856404; border-color: #ffc107; }
-  .edit-status-btn.active-paid    { background: #d1e7dd; color: #0a5c36; border-color: #52b788; }
-  .edit-save-btn { background: var(--accent); color: white; border: none; border-radius: 6px; padding: 7px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
-  .edit-save-btn:hover { background: #235c40; }
-  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .modal-backdrop.hidden { display: none; }
-  .modal-box { background: var(--surface); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.18); width: 100%; max-width: 540px; overflow: hidden; }
-  .modal-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .modal-head h3 { font-size: 14px; font-weight: 600; color: var(--text); }
-  .modal-close { background: none; border: none; font-size: 20px; color: var(--text-hint); cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.12s; }
-  .modal-close:hover { color: var(--text); }
-  .modal-body { padding: 14px 16px; }
-  .memo-textarea { width: 100%; min-height: 340px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface2); color: var(--text); outline: none; resize: vertical; line-height: 1.8; transition: border-color 0.15s; }
-  .memo-textarea:focus { border-color: var(--accent-mid); }
-  .modal-foot { padding: 10px 16px 14px; display: flex; gap: 8px; justify-content: flex-end; }
-  .btn-save { background: var(--accent); color: white; border: none; border-radius: 7px; padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
-  .btn-save:hover { background: #235c40; }
-  .btn-save:disabled { background: var(--text-hint); cursor: not-allowed; }
-  .btn-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
-  .btn-cancel:hover { background: var(--border); }
-  .edit-mode-btn { background: rgba(255,255,255,0.18); border: none; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; display: flex; align-items: center; gap: 5px; }
-  .edit-mode-btn:hover { background: rgba(255,255,255,0.3); }
-  .edit-mode-btn.active { background: #52b788; color: white; }
-  .pw-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: flex; align-items: center; justify-content: center; }
-  .pw-modal-backdrop.hidden { display: none; }
-  .pw-box { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
-  .pw-title { font-size: 15px; font-weight: 600; margin-bottom:4px; }
-  .pw-sub { font-size: 12px; color: var(--text-hint); margin-bottom: 16px; }
-  .pw-input { width: 100%; border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface2); color: var(--text); outline: none; transition: border-color 0.15s; margin-bottom: 8px; }
-  .pw-input:focus { border-color: var(--accent-mid); }
-  .pw-error { font-size: 12px; color: var(--red); min-height: 16px; margin-bottom: 12px; }
-  .pw-btns { display: flex; gap: 8px; }
-  .pw-confirm { flex: 1; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
-  .pw-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
-  #edit-mode-btn { display: none !important; }
-</style>
-  <meta name="theme-color" content="#1a3a5c">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="슈니스">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>슈니스 일정</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FRXFPKJ1CF"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-FRXFPKJ1CF');
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #f5f2eb; --surface: #ffffff; --surface2: #faf8f4;
+            --border: #e0dbd0; --text: #1a1a1a; --text-sub: #6b6560; --text-hint: #a8a39a;
+            --accent: #2d6a4f; --accent-light: #d8ede4; --accent-mid: #52b788;
+            --red: #c1440e; --yellow: #e07a00; --yellow-light: #fef3d6;
+            --court4: #7c4dbd; --court4-light: #ede8f8;
+            --radius: 12px; --shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+        
+        /* Loading */
+        #loading { position: fixed; inset: 0; background: rgba(45,106,79,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 16px; }
+        #loading.hidden { display: none; }
+        .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; font-size: 14px; font-weight: 500; }
+
+        .header { background: var(--accent); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .header-title { color: white; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        .header-title span { font-weight: 300; opacity: 0.75; margin-right: 6px; font-size: 13px; }
+        .month-nav { display: flex; align-items: center; gap: 12px; color: white; }
+        .month-nav button { background: rgba(255,255,255,0.18); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .month-label { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; min-width: 80px; text-align: center; }
+
+        .main { max-width: 1060px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+        @media (max-width: 780px) { .main { grid-template-columns: 1fr; padding: 12px 10px; } }
+
+        /* Calendar */
+        .calendar-wrap { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+        .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface2); border-bottom: 1px solid var(--border); }
+        .cal-header div { text-align: center; padding: 10px 0; font-size: 11px; font-weight: 500; color: var(--text-sub); }
+        .cal-header div:first-child { color: var(--red); }
+        .cal-header div:last-child { color: #4472b8; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+        .cal-day { min-height: 72px; padding: 6px 4px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; position: relative; }
+        .cal-day:nth-child(7n) { border-right: none; }
+        .cal-day.today .day-num { background: var(--accent); color: white; border-radius: 50%; }
+        .cal-day.selected { background: #edf7f2; }
+        .day-num { font-size: 12px; font-weight: 500; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 3px; }
+        
+        /* Events & Chips */
+        .event-chip { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .court-1 { background: var(--accent-light); color: var(--accent); }
+        .court-2 { background: var(--yellow-light); color: var(--yellow); }
+        .court-3 { background: #e8eaf6; color: #3949ab; }
+        .court-4 { background: var(--court4-light); color: var(--court4); }
+        .court-etc { background: #f1efe8; color: #5f5e5a; }
+
+        /* Status & Members Grid (Mobile Optimized) */
+        .member-grid, #members-overview, #paid-overview, #yearly-overview { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px 6px; 
+            margin-bottom: 4px; 
+        }
+        .member-chip, .roster-chip { 
+            font-size: 12px; 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            background: var(--surface2); 
+            border: 1.5px solid var(--border); 
+            color: var(--text-sub); 
+            white-space: nowrap; 
+            display: inline-flex; 
+            align-items: center; 
+            font-weight: 500;
+        }
+        .member-chip.attending { background: var(--accent-light); border-color: #8ecdb2; color: var(--accent); }
+        
+        @media (max-width: 480px) {
+            .member-chip, .roster-chip { font-size: 11px; padding: 5px 10px; }
+            .card-body { padding: 12px 10px; } /* 추가팁 반영: 좌우 패딩 축소 */
+        }
+
+        /* Forms & Cards */
+        .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px; }
+        .card-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .card-head h3 { font-size: 13px; font-weight: 600; }
+        .card-body { padding: 14px 16px; }
+        .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-light); color: var(--accent); font-weight: 500; }
+        
+        .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+        .form-label { font-size: 11px; color: var(--text-sub); font-weight: 600; }
+        .form-input, .form-select { border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 14px; width: 100%; outline: none; background: var(--surface2); }
+        .btn-primary { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 12px; font-weight: 600; cursor: pointer; width: 100%; }
+
+        /* Modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-backdrop.hidden { display: none; }
+        .modal-box { background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 500px; }
+        .memo-textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; resize: none; }
+    </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">슈니스 불러오는 중...</div>
+    <div class="loading-spinner"></div>
+    <div class="loading-text">슈니스 불러오는 중...</div>
 </div>
 
 <div class="header">
-  <div class="header-title"><span>🎾</span> SSU Tennis, SSUNISS!!</div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">
-      <span id="edit-mode-icon">🔒</span><span id="edit-mode-label">편집</span>
-    </button>
+    <div class="header-title"><span>🎾</span> SSU Tennis, SSUNISS!!</div>
     <div class="month-nav">
-      <button onclick="prevMonth()">‹</button>
-      <div class="month-label" id="month-label"></div>
-      <button onclick="nextMonth()">›</button>
+        <button onclick="changeMonth(-1)">‹</button>
+        <div class="month-label" id="month-label">2026.03</div>
+        <button onclick="changeMonth(1)">›</button>
     </div>
-  </div>
-</div>
-
-<div id="pay-banner" style="display:none; background:#fff3cd; border-bottom:2px solid #ffc107; padding:12px 24px; align-items:center; justify-content:space-between; gap:12px;">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <span style="font-size:20px;">💳</span>
-    <div>
-      <div style="font-size:13px;font-weight:700;color:#856404;">다음 달 코트 결제 기간이에요!</div>
-      <div style="font-size:12px;color:#a07800;margin-top:2px;">매월 22일 9시까지 코트 예약 결제를 완료해주세요 🎾</div>
-    </div>
-  </div>
-  <button onclick="dismissPayBanner()" style="background:#fff3cd;border:1px solid #ffc107;cursor:pointer;font-size:11px;color:#856404;border-radius:6px;padding:3px 8px;flex-shrink:0;margin-right:4px">이번 달 알림 금지</button>
-  <button onclick="document.getElementById('pay-banner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#856404;flex-shrink:0;padding:0 4px;">×</button>
 </div>
 
 <div class="main">
-  <div>
-    <div class="calendar-wrap">
-      <div class="cal-header">
-        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
-      </div>
-      <div class="cal-grid" id="cal-grid"></div>
-    </div>
-    <div style="margin-top:10px;padding:0 4px;">
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot dot-1"></div>1코트</div>
-        <div class="legend-item"><div class="legend-dot dot-2"></div>2코트</div>
-        <div class="legend-item"><div class="legend-dot dot-3"></div>3코트</div>
-        <div class="legend-item"><div class="legend-dot dot-4"></div>4코트</div>
-      </div>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <a href="https://booking.gwanakgongdan.or.kr/booking/1515?center=KWAN_AK03&type=1002&part=02&place=285"
-          target="_blank"
-          style="font-size:12px;color:var(--accent);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:var(--accent-light);border:1px solid #b2dac6;border-radius:20px;">
-          🔗 관악구 테니스코트 예약 링크
-        </a>
-        <button id="memo-btn" onclick="openMemo()"
-          style="font-size:12px;font-weight:600;color:#3949ab;background:#e8eaf6;border:1px solid #9fa8da;border-radius:20px;padding:5px 10px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background 0.15s;">
-          📝 <span id="memo-btn-label">3월 메모</span>
-        </button>
-      </div>
-      <div style="margin-top:8px;font-size:12px;color:var(--red);font-weight:500;">
-        📌 예약일정: 1~15일 18시 / 추첨 18일 10시 / 결제 22일 9시
-      </div>
-    </div>
-  </div>
-
-  <div class="panel">
-
-    <!-- 일정 상세 -->
-    <div class="card">
-      <div class="card-head">
-        <h3>일정 상세</h3>
-        <span class="badge" id="event-count-badge">0개</span>
-      </div>
-      <div class="card-body">
-        <div class="date-label" id="detail-date">날짜를 선택하세요</div>
-        <div class="date-sub" id="detail-dow"></div>
-        <div id="events-detail">
-          <div class="no-event">날짜를 클릭하면 일정을 확인하고<br>참여자를 관리할 수 있어요.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 일정 추가 -->
-    <div class="card">
-      <div class="card-head"><h3>일정 추가</h3></div>
-      <div class="card-body">
-        <div class="add-event-form">
-          <div class="form-row">
-            <div class="form-label">날짜</div>
-            <input type="date" class="form-input" id="new-date">
-          </div>
-          <div class="form-row">
-            <div class="form-label">코트</div>
-            <select class="form-select" id="new-court" onchange="toggleCustomCourt()">
-              <option value="1">1코트</option>
-              <option value="2">2코트</option>
-              <option value="3">3코트</option>
-              <option value="4">4코트</option>
-              <option value="기타">기타코트</option>
-            </select>
-          </div>
-          <div class="form-row" id="custom-court-row" style="display:none;">
-            <div class="form-label">코트명 직접 입력</div>
-            <input type="text" class="form-input" id="custom-court-name" placeholder="예: 5코트, 실내코트 등">
-          </div>
-          <div class="form-row-2">
-            <div class="form-row">
-              <div class="form-label">시작 시간</div>
-              <input type="time" class="form-input" id="new-start" value="18:00" oninput="autoSetEnd()">
+    <div>
+        <div class="calendar-wrap">
+            <div class="cal-header">
+                <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
             </div>
-            <div class="form-row">
-              <div class="form-label">종료 시간</div>
-              <input type="time" class="form-input" id="new-end" value="20:00">
+            <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        
+        <div style="margin-top:15px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+            <button id="memo-btn" onclick="openMemo()" style="font-size:12px; font-weight:600; color:#3949ab; background:#e8eaf6; border:1px solid #9fa8da; border-radius:20px; padding:6px 12px; cursor:pointer;">
+                📝 <span id="memo-btn-label">3월 메모</span>
+            </button>
+            <a href="https://booking.gwanakgongdan.or.kr/booking/1515" target="_blank" style="font-size:12px; color:var(--accent); font-weight:600; text-decoration:none; padding:6px 12px; background:var(--accent-light); border-radius:20px;">🔗 코트 예약 링크</a>
+        </div>
+        <div style="margin-top:10px; font-size:12px; color:var(--red); font-weight:500;">
+            📌 예약: 1~15일 / 추첨: 18일 / 결제: 22일 9시 마감
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="card">
+            <div class="card-head">
+                <h3>일정 상세</h3>
+                <span class="badge" id="event-count-badge">0개</span>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-label">예약자 (메모)</div>
-            <input type="text" class="form-input" id="new-memo" placeholder="김숭실">
-          </div>
-          <button class="btn-primary" id="add-btn" onclick="addEvent()">+ 일정 추가</button>
+            <div class="card-body">
+                <div id="detail-date" style="font-size:20px; font-weight:700; color:var(--accent); font-family:'DM Mono';">날짜 선택</div>
+                <div id="events-detail" style="margin-top:10px;">
+                    <div style="color:var(--text-hint); text-align:center; padding:20px;">날짜를 클릭해 참여자를 관리하세요.</div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 이달 참여 현황 -->
-    <div class="card">
-      <div class="card-head">
-        <h3>🎾 이달 참여현황</h3>
-        <span class="badge" id="member-count-badge">0명</span>
-      </div>
-      <div class="card-body" id="members-overview" style="padding-top:8px;padding-bottom:8px;"></div>
-    </div>
-
-    <!-- 금년 참여현황 -->
-    <div class="card">
-      <div class="card-head">
-        <h3>📅 <span id="yearly-title">2026년</span> 참여현황</h3>
-        <span class="badge" id="yearly-count-badge">0명</span>
-      </div>
-      <div class="card-body" id="yearly-overview" style="padding-top:8px;padding-bottom:8px;">
-        <div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint);">불러오는 중...</div>
-      </div>
-    </div>
-
-    <!-- 결제완료 현황 -->
-    <div class="card">
-      <div class="card-head">
-        <h3>💳 결제완료 현황</h3>
-        <span class="badge" id="paid-month-badge" style="background:#d1e7dd;color:#0a5c36;">0명</span>
-      </div>
-      <div class="card-body" id="paid-overview" style="padding-top:8px;padding-bottom:8px;">
-        <div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint);">이번 달 결제완료 내역이 없어요</div>
-      </div>
-    </div>
-
-    <!-- 전체 멤버 명단 -->
-    <div class="card">
-      <div class="card-head">
-        <h3>전체 멤버 명단</h3>
-        <span class="badge" id="roster-count-badge">0명</span>
-      </div>
-      <div class="card-body">
-        <div class="roster-hint">멤버를 추가하거나 삭제할 수 있어요</div>
-        <div class="roster-grid" id="roster-grid"></div>
-        <div class="add-roster">
-          <input type="text" id="roster-input" placeholder="새 멤버 이름 입력"
-            onkeydown="if(event.key==='Enter') addRosterMember()">
-          <button onclick="addRosterMember()">+ 추가</button>
+        <div class="card">
+            <div class="card-head"><h3>일정 추가</h3></div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-label">날짜</div>
+                    <input type="date" id="new-date" class="form-input">
+                </div>
+                <div class="form-row">
+                    <div class="form-label">코트</div>
+                    <select id="new-court" class="form-select">
+                        <option value="1">1코트</option><option value="2">2코트</option>
+                        <option value="3">3코트</option><option value="4">4코트</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">예약(결제)자 성명</div> <input type="text" id="new-memo" class="form-input" placeholder="성명을 입력하세요">
+                </div>
+                <button class="btn-primary" onclick="addEvent()">+ 일정 등록</button>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 방문자 통계 -->
-    <div class="card">
-      <div class="card-head">
-        <h3>방문자 통계</h3>
-        <span class="badge" id="visit-total-badge">-</span>
-      </div>
-      <div class="card-body" id="visit-stats" style="padding-top:10px;padding-bottom:10px;">
-        <div style="text-align:center;font-size:13px;color:var(--text-hint);">불러오는 중...</div>
-      </div>
-    </div>
+        <div class="card">
+            <div class="card-head">
+                <h3>🎾 <span id="current-month-title">3월</span> 참여현황</h3> <span class="badge" id="member-count-badge">0명</span>
+            </div>
+            <div class="card-body" id="members-overview"></div>
+        </div>
 
-  </div>
+        <div class="card">
+            <div class="card-head">
+                <h3>💳 결제완료 현황</h3>
+                <span class="badge" id="paid-count-badge" style="background:#d1e7dd; color:#0a5c36;">0명</span>
+            </div>
+            <div class="card-body" id="paid-overview"></div>
+        </div>
+    </div>
 </div>
 
-<!-- 비밀번호 모달 -->
-<div class="pw-modal-backdrop hidden" id="pw-modal">
-  <div class="pw-box">
-    <div class="pw-title">🔐 편집 모드</div>
-    <div class="pw-sub">멤버 전용 비밀번호를 입력하세요</div>
-    <input class="pw-input" type="password" id="pw-input" placeholder="비밀번호"
-      onkeydown="if(event.key==='Enter') confirmPassword()">
-    <div class="pw-error" id="pw-error"></div>
-    <div class="pw-btns">
-      <button class="pw-cancel" onclick="closePwModal()">취소</button>
-      <button class="pw-confirm" onclick="confirmPassword()">확인</button>
+<div class="modal-backdrop hidden" id="memo-modal">
+    <div class="modal-box">
+        <div class="card-head">
+            <h3 id="memo-modal-title">3월 메모</h3>
+            <button onclick="closeMemo()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+        </div>
+        <div class="card-body">
+            <textarea id="memo-textarea" class="memo-textarea" placeholder="특이사항을 입력하세요"></textarea>
+            <button class="btn-primary" style="margin-top:10px;" onclick="saveMemo()">저장하기</button>
+        </div>
     </div>
-  </div>
-</div>
-
-<!-- 메모 모달 -->
-<div class="modal-backdrop hidden" id="memo-modal" onclick="onBackdropClick(event)">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3 id="memo-modal-title">3월 메모</h3>
-      <button class="modal-close" onclick="closeMemo()">×</button>
-    </div>
-    <div class="modal-body">
-      <textarea class="memo-textarea" id="memo-textarea" placeholder="예약자 이름, 특이사항 등 자유롭게 메모하세요." oninput="onMemoInput()"></textarea>
-    </div>
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeMemo()">닫기</button>
-      <button class="btn-save" id="memo-save-btn" onclick="saveMemo()" disabled>저장</button>
-    </div>
-  </div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://unlvmtixzhvzxfexynri.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHZtdGl4emh2enhmZXh5bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTMzMzQsImV4cCI6MjA4OTgyOTMzNH0.ZhATMOOT7fBg3iFcofXaWCF2tstV5rYka-Ae5R3YnF0';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = 'https://unlvmtixzhvzxfexynri.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHZtdGl4emh2enhmZXh5bnJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTMzMzQsImV4cCI6MjA4OTgyOTMzNH0.ZhATMOOT7fBg3iFcofXaWCF2tstV5rYka-Ae5R3YnF0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth();
-let selectedDate = null;
-let masterRoster = [];
-let events = {};
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth();
+    let selectedDate = null;
+    let events = {};
+    let masterRoster = [];
 
-const courtClass = { '1':'court-1','2':'court-2','3':'court-3','4':'court-4' };
-const courtColor = { '1':'#52b788','2':'#e07a00','3':'#5c6bc0','4':'#7c4dbd' };
-function getCourtClass(c) { return courtClass[c] || 'court-etc'; }
-function getCourtColor(c) { return courtColor[c] || '#888780'; }
-const weekDaysFull = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-
-function showLoading(msg='저장 중...') {
-  document.querySelector('#loading .loading-text').textContent = msg;
-  document.getElementById('loading').classList.remove('hidden');
-}
-function hideLoading() {
-  document.getElementById('loading').classList.add('hidden');
-}
-
-async function loadAll() {
-  showLoading('슈니스 불러오는 중...');
-  try {
-    const { data: rosterData } = await sb.from('roster').select('*').order('sort_order');
-    masterRoster = rosterData.map(r => r.name);
-    await loadMonthData();
-  } catch(e) {
-    alert('데이터 로드 실패: ' + e.message);
-  }
-  hideLoading();
-  renderCalendar();
-  renderDetail();
-  renderRoster();
-  renderYearlyOverview();
-}
-
-async function loadMonthData() {
-  const y = currentYear;
-  const m = String(currentMonth + 1).padStart(2, '0');
-  const from = `${y}-${m}-01`;
-  const to   = `${y}-${m}-31`;
-  const [{ data: schedData }, { data: slotData }] = await Promise.all([
-    sb.from('schedules').select('*').gte('date', from).lte('date', to),
-    sb.from('slots').select('*').gte('date', from).lte('date', to)
-  ]);
-  events = {};
-  (schedData || []).forEach(s => {
-    events[s.date] = { members: s.members || [], slots: [] };
-  });
-  (slotData || []).forEach(slot => {
-    if (!events[slot.date]) events[slot.date] = { members: [], slots: [] };
-    events[slot.date].slots.push({
-      id: slot.id, court: slot.court,
-      start: slot.start_time, end: slot.end_time,
-      memo: slot.memo, status: slot.status
-    });
-  });
-}
-
-function toggleCustomCourt() {
-  const val = document.getElementById('new-court').value;
-  document.getElementById('custom-court-row').style.display = val === '기타' ? 'flex' : 'none';
-  if (val === '기타') document.getElementById('custom-court-name').focus();
-}
-
-function autoSetEnd() {
-  const v = document.getElementById('new-start').value;
-  if (!v) return;
-  const [h, m] = v.split(':').map(Number);
-  const eh = (h + 2) % 24;
-  document.getElementById('new-end').value = `${String(eh).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-}
-
-// ── 날씨 ──────────────────────────────────────────────────
-let weatherData = {};
-const WMO_ICON = {
-  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
-  51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',
-  71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
-  85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'
-};
-async function loadWeather() {
-  try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.4784&longitude=126.9516&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16';
-    const res = await fetch(url);
-    const data = await res.json();
-    weatherData = {};
-    data.daily.time.forEach((date, i) => {
-      weatherData[date] = {
-        icon: WMO_ICON[data.daily.weathercode[i]] || '🌡️',
-        max:  Math.round(data.daily.temperature_2m_max[i]),
-        min:  Math.round(data.daily.temperature_2m_min[i]),
-        rain: data.daily.precipitation_probability_max[i]
-      };
-    });
-  } catch(e) {}
-}
-
-// ── 캘린더 ────────────────────────────────────────────────
-function renderCalendar() {
-  const y = currentYear, m = currentMonth;
-  document.getElementById('month-label').textContent = `${y}.${String(m+1).padStart(2,'0')}`;
-  const firstDay = new Date(y, m, 1).getDay();
-  const daysInMonth = new Date(y, m+1, 0).getDate();
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  let html = '';
-  for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
-  for (let d = 1; d <= daysInMonth; d++) {
-    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dow = new Date(y, m, d).getDay();
-    const slots = events[ds]?.slots || [];
-    const members = events[ds]?.members || [];
-    const w = weatherData[ds];
-    let cls = 'cal-day' + (dow===0?' sun':dow===6?' sat':'') + (ds===todayStr?' today':'') + (ds===selectedDate?' selected':'') + ((slots.length||members.length)?' has-event':'');
-    let chips = slots.slice(0,2).map(e => `<div class="event-chip ${getCourtClass(e.court)}" onclick="event.stopPropagation();selectDate('${ds}')">${['1','2','3','4'].includes(e.court)?e.court+'코트':e.court} ${e.start}</div>`).join('');
-    if (slots.length > 2) chips += `<div class="event-chip" style="background:var(--surface2);color:var(--text-hint)">+${slots.length-2}개</div>`;
-    html += `<div class="${cls}" onclick="selectDate('${ds}')"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><div class="day-num" style="margin-bottom:0;">${d}</div>${w?`<div class="weather-row" style="margin-bottom:0;"><span class="w-icon">${w.icon}</span><span class="w-temp">${w.max}°</span>${w.rain>=40?`<span class="w-rain">${w.rain}%</span>`:''}</div>`:''}</div>${chips}</div>`;
-  }
-  const rem = (firstDay + daysInMonth) % 7;
-  if (rem) for (let i = 0; i < 7 - rem; i++) html += `<div class="cal-day empty"></div>`;
-  document.getElementById('cal-grid').innerHTML = html;
-  renderMembersOverview();
-}
-
-async function prevMonth() {
-  if (--currentMonth < 0) { currentMonth = 11; currentYear--; }
-  selectedDate = null;
-  document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
-  showLoading('불러오는 중...');
-  await loadMonthData();
-  hideLoading();
-  renderCalendar(); renderDetail();
-}
-async function nextMonth() {
-  if (++currentMonth > 11) { currentMonth = 0; currentYear++; }
-  selectedDate = null;
-  document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
-  showLoading('불러오는 중...');
-  await loadMonthData();
-  hideLoading();
-  renderCalendar(); renderDetail();
-}
-
-function selectDate(ds) {
-  selectedDate = ds;
-  document.getElementById('new-date').value = ds;
-  renderCalendar(); renderDetail();
-}
-
-// ── 일정 상세 ─────────────────────────────────────────────
-function renderDetail() {
-  const dateEl = document.getElementById('detail-date');
-  const dowEl  = document.getElementById('detail-dow');
-  const detailEl = document.getElementById('events-detail');
-  const badge  = document.getElementById('event-count-badge');
-  if (!selectedDate) {
-    dateEl.textContent = '날짜를 선택하세요'; dowEl.textContent = ''; badge.textContent = '0개';
-    detailEl.innerHTML = '<div class="no-event">날짜를 클릭하면 일정을 확인하고<br>참여자를 관리할 수 있어요.</div>';
-    return;
-  }
-  const [y,mo,d] = selectedDate.split('-').map(Number);
-  const dow = new Date(y, mo-1, d).getDay();
-  dateEl.textContent = `${mo}월 ${d}일`;
-  const w = weatherData[selectedDate];
-  if (w) {
-    dowEl.innerHTML = `${weekDaysFull[dow]} &nbsp;<span onclick="window.open('https://www.google.com/search?q=관악구+날씨','_blank')" style="cursor:pointer;" title="클릭하면 구글 날씨로 이동">${w.icon} ${w.max}°/${w.min}° &nbsp;<span style="color:#4472b8;">🌂${w.rain}%</span></span>`;
-  } else {
-    dowEl.textContent = weekDaysFull[dow];
-  }
-  const dayData = events[selectedDate];
-  const slots = dayData?.slots || [];
-  badge.textContent = `${slots.length}개`;
-  const attending = dayData?.members || [];
-  const memberChips = masterRoster.map(name => {
-    const isAttending = attending.includes(name);
-    return `<div class="member-chip ${isAttending?'attending':'absent'}" onclick="toggleMember('${selectedDate}','${name}')">${isAttending?'<span class="chip-icon">✓</span>':''}${name}</div>`;
-  }).join('');
-  const attendCount = attending.filter(n => masterRoster.includes(n)).length;
-  const slotSection = slots.length ? `
-    <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin:14px 0 6px;">코트 일정 (${slots.length}개)</div>
-    <div class="slots-list">${slots.map(e => {
-      const statusCls = e.status==='paid'?'status-paid':'status-pending';
-      const statusLabel = e.status==='paid'?'결제완료':'예약완료';
-      return `<div class="slot-card" id="slot-card-${e.id}">
-        <div class="slot-row" onclick="toggleSlotEdit(${e.id})">
-          <div class="court-dot" style="width:10px;height:10px;border-radius:50%;background:${getCourtColor(e.court)};flex-shrink:0;"></div>
-          <span class="slot-court">${['1','2','3','4'].includes(e.court)?e.court+'코트':e.court}</span>
-          <span class="slot-time">${e.start} – ${e.end}</span>
-          <span class="status-badge ${statusCls}">${statusLabel}</span>
-          ${e.memo?`<span class="slot-memo">📝 ${e.memo}</span>`:'<span class="slot-memo"></span>'}
-          <button onclick="event.stopPropagation();deleteSlot('${selectedDate}',${e.id})" class="slot-del" title="삭제">×</button>
-        </div>
-        <div class="slot-edit" id="slot-edit-${e.id}">
-          <div><div class="edit-label">상태</div>
-            <div class="edit-status-row">
-              <button class="edit-status-btn ${e.status==='pending'?'active-pending':''}" id="btn-pending-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'pending')">예약완료</button>
-              <button class="edit-status-btn ${e.status==='paid'?'active-paid':''}" id="btn-paid-${e.id}" onclick="setSlotStatus('${selectedDate}',${e.id},'paid')">결제완료</button>
-            </div>
-          </div>
-          <div class="edit-row">
-            <div><div class="edit-label">시작 시간</div><input class="edit-time" type="time" id="edit-start-${e.id}" value="${e.start}" oninput="autoEditEnd(${e.id})"></div>
-            <div><div class="edit-label">종료 시간</div><input class="edit-time" type="time" id="edit-end-${e.id}" value="${e.end}"></div>
-          </div>
-          <button class="edit-save-btn" onclick="saveSlotEdit('${selectedDate}',${e.id})">저장</button>
-        </div>
-      </div>`;
-    }).join('')}</div>
-  ` : `<div style="font-size:11px;color:var(--text-hint);margin-top:14px;padding:10px;background:var(--surface2);border-radius:7px;text-align:center;">코트 일정이 없어요. 아래에서 추가할 수 있어요.</div>`;
-  detailEl.innerHTML = `
-    <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:8px;">참여자 (${attendCount}/${masterRoster.length}명) — 클릭으로 참여/불참 전환</div>
-    <div class="member-grid">${memberChips}</div>
-    ${slotSection}
-  `;
-}
-
-async function toggleMember(dateStr, name) {
-  if (!requireEdit()) return;
-  if (!events[dateStr]) events[dateStr] = { members: [], slots: [] };
-  const members = events[dateStr].members;
-  const idx = members.indexOf(name);
-  if (idx === -1) members.push(name); else members.splice(idx, 1);
-  renderDetail();
-  renderMembersOverview();
-  await sb.from('schedules').upsert({ date: dateStr, members }, { onConflict: 'date' });
-}
-
-async function addEvent() {
-  if (!requireEdit()) return;
-  const date  = document.getElementById('new-date').value;
-  const start = document.getElementById('new-start').value;
-  const end   = document.getElementById('new-end').value;
-  let court = document.getElementById('new-court').value;
-  if (court === '기타') {
-    court = document.getElementById('custom-court-name').value.trim();
-    if (!court) { alert('코트명을 입력해주세요.'); return; }
-  }
-  const memo = document.getElementById('new-memo').value;
-  if (!date) { alert('날짜를 선택해주세요.'); return; }
-  if (start >= end) { alert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
-  const btn = document.getElementById('add-btn');
-  btn.disabled = true;
-  showLoading('일정 저장 중...');
-  try {
-    await sb.from('schedules').upsert({ date, members: events[date]?.members || [] }, { onConflict: 'date' });
-    const { data } = await sb.from('slots').insert({
-      date, court, start_time: start, end_time: end, memo, status: 'pending'
-    }).select().single();
-    if (!events[date]) events[date] = { members: [], slots: [] };
-    events[date].slots.push({ id: data.id, court, start, end, memo, status: 'pending' });
-    selectedDate = date;
-    document.getElementById('new-memo').value = '';
-    renderCalendar(); renderDetail();
-  } catch(e) { alert('저장 실패: ' + e.message); }
-  hideLoading();
-  btn.disabled = false;
-}
-
-async function deleteSlot(dateStr, id) {
-  if (!requireEdit()) return;
-  if (!confirm('이 코트 일정을 삭제할까요?')) return;
-  showLoading('삭제 중...');
-  await sb.from('slots').delete().eq('id', id);
-  const day = events[dateStr];
-  if (day) {
-    day.slots = day.slots.filter(e => e.id !== id);
-    if (!day.slots.length) {
-      await sb.from('schedules').delete().eq('date', dateStr);
-      delete events[dateStr];
+    async function init() {
+        showLoading();
+        const { data: rosterData } = await sb.from('roster').select('name').order('sort_order');
+        masterRoster = rosterData.map(r => r.name);
+        await loadData();
+        hideLoading();
     }
-  }
-  hideLoading();
-  renderCalendar(); renderDetail();
-}
 
-function toggleSlotEdit(id) {
-  document.getElementById(`slot-card-${id}`).classList.toggle('expanded');
-}
+    async function loadData() {
+        const y = currentYear, m = String(currentMonth + 1).padStart(2, '0');
+        const from = `${y}-${m}-01`, to = `${y}-${m}-31`;
+        
+        const { data: sched } = await sb.from('schedules').select('*').gte('date', from).lte('date', to);
+        const { data: slots } = await sb.from('slots').select('*').gte('date', from).lte('date', to);
 
-async function setSlotStatus(dateStr, id, status) {
-  if (!requireEdit()) return;
-  const slot = events[dateStr]?.slots?.find(s => s.id === id);
-  if (!slot) return;
-  slot.status = status;
-  await sb.from('slots').update({ status }).eq('id', id);
-  const btnP = document.getElementById(`btn-pending-${id}`);
-  const btnPaid = document.getElementById(`btn-paid-${id}`);
-  if (btnP) btnP.className = 'edit-status-btn' + (status==='pending'?' active-pending':'');
-  if (btnPaid) btnPaid.className = 'edit-status-btn' + (status==='paid'?' active-paid':'');
-  const badge = document.querySelector(`#slot-card-${id} .status-badge`);
-  if (badge) { badge.className = `status-badge ${status==='paid'?'status-paid':'status-pending'}`; badge.textContent = status==='paid'?'결제완료':'예약완료'; }
-  renderPaidOverview();
-}
+        events = {};
+        (sched || []).forEach(s => events[s.date] = { members: s.members || [], slots: [] });
+        (slots || []).forEach(s => {
+            if(!events[s.date]) events[s.date] = { members: [], slots: [] };
+            events[s.date].slots.push(s);
+        });
 
-function autoEditEnd(id) {
-  const s = document.getElementById(`edit-start-${id}`).value;
-  if (!s) return;
-  const [h,m] = s.split(':').map(Number);
-  document.getElementById(`edit-end-${id}`).value = `${String((h+2)%24).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-}
-
-async function saveSlotEdit(dateStr, id) {
-  if (!requireEdit()) return;
-  const slot = events[dateStr]?.slots?.find(s => s.id === id);
-  if (!slot) return;
-  const newStart = document.getElementById(`edit-start-${id}`).value;
-  const newEnd   = document.getElementById(`edit-end-${id}`).value;
-  if (newStart >= newEnd) { alert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
-  showLoading('저장 중...');
-  await sb.from('slots').update({ start_time: newStart, end_time: newEnd }).eq('id', id);
-  slot.start = newStart; slot.end = newEnd;
-  hideLoading();
-  renderDetail(); renderCalendar();
-}
-
-function getMonthlyCount(name) {
-  const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-  return Object.entries(events).filter(([d, day]) => d.startsWith(monthStr) && day.members.includes(name)).length;
-}
-
-function renderRoster() {
-  const grid = document.getElementById('roster-grid');
-  document.getElementById('roster-count-badge').textContent = `${masterRoster.length}명`;
-  if (!masterRoster.length) { grid.innerHTML = '<div style="font-size:12px;color:var(--text-hint);">멤버가 없어요.</div>'; return; }
-  grid.innerHTML = masterRoster.map(name => {
-    const cnt = getMonthlyCount(name);
-    const delBtn = cnt === 0
-      ? `<button class="del-btn" onclick="event.stopPropagation();deleteRosterMember('${name}')">×</button>`
-      : `<span class="del-btn-disabled" title="이번 달 참여 중 (${cnt}회)">·</span>`;
-    return `<div class="roster-chip">${name}${delBtn}</div>`;
-  }).join('');
-}
-
-async function addRosterMember() {
-  if (!requireEdit()) return;
-  const inp = document.getElementById('roster-input');
-  const name = inp.value.trim();
-  if (!name) return;
-  if (masterRoster.includes(name)) { alert('이미 있는 멤버예요.'); return; }
-  showLoading('멤버 추가 중...');
-  const sortOrder = masterRoster.length + 1;
-  await sb.from('roster').insert({ name, sort_order: sortOrder });
-  masterRoster.push(name);
-  inp.value = '';
-  hideLoading();
-  renderRoster(); renderMembersOverview();
-}
-
-async function deleteRosterMember(name) {
-  if (!requireEdit()) return;
-  if (getMonthlyCount(name) > 0) { alert('이번 달 참여 일정이 있어 삭제할 수 없어요.'); return; }
-  if (!confirm(`'${name}'을(를) 전체 명단에서 삭제할까요?`)) return;
-  showLoading('삭제 중...');
-  await sb.from('roster').delete().eq('name', name);
-  masterRoster = masterRoster.filter(m => m !== name);
-  Object.values(events).forEach(day => { day.members = day.members.filter(m => m !== name); });
-  hideLoading();
-  renderRoster(); renderDetail(); renderCalendar();
-}
-
-function renderMembersOverview() {
-  const container = document.getElementById('members-overview');
-  const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-  const counts = {};
-  Object.entries(events).forEach(([date, day]) => {
-    if (!date.startsWith(monthStr)) return;
-    day.members.forEach(m => { counts[m] = (counts[m]||0) + 1; });
-  });
-  const members = Object.entries(counts).sort((a,b) => b[1]-a[1]);
-  document.getElementById('member-count-badge').textContent = `${members.length}명`;
-  if (!members.length) {
-    container.innerHTML = '<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint)">이번 달 참여 멤버가 없어요</div>';
-    renderRoster(); renderPaidOverview(); return;
-  }
-  container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
-      ${members.map(([name, cnt]) =>
-        `<span style="font-size:12px;">
-          <span style="font-weight:600;color:var(--accent);">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:var(--text-sub);margin-left:3px;">${cnt}회</span>
-        </span>`
-      ).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
-    </div>
-  `;
-  renderRoster();
-  renderPaidOverview();
-}
-
-// ── 금년 참여 현황 ─────────────────────────────────────────
-async function renderYearlyOverview() {
-  const container = document.getElementById('yearly-overview');
-  const badge = document.getElementById('yearly-count-badge');
-  document.getElementById('yearly-title').textContent = `${currentYear}년`;
-
-  // 금년 전체 데이터 로드
-  const { data: schedData } = await sb.from('schedules')
-    .select('date, members')
-    .gte('date', `${currentYear}-01-01`)
-    .lte('date', `${currentYear}-12-31`);
-
-  if (!schedData || !schedData.length) {
-    badge.textContent = '0명';
-    container.innerHTML = '<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint);">올해 참여 데이터가 없어요</div>';
-    return;
-  }
-
-  const counts = {};
-  schedData.forEach(s => {
-    (s.members || []).forEach(m => { counts[m] = (counts[m]||0) + 1; });
-  });
-
-  const members = Object.entries(counts).sort((a,b) => b[1]-a[1]);
-  badge.textContent = `${members.length}명`;
-
-  container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
-      ${members.map(([name, cnt]) =>
-        `<span style="font-size:12px;">
-          <span style="font-weight:600;color:var(--accent);">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:var(--text-sub);margin-left:3px;">${cnt}회</span>
-        </span>`
-      ).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
-    </div>
-  `;
-}
-
-// ── 결제완료 현황 ─────────────────────────────────────────
-function renderPaidOverview() {
-  const container = document.getElementById('paid-overview');
-  const badge = document.getElementById('paid-month-badge');
-  const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-
-  // 예약자(메모) 기준으로 시간 집계
-  const hoursByMemo = {};
-  Object.entries(events).forEach(([date, day]) => {
-    if (!date.startsWith(monthStr)) return;
-    (day.slots || []).forEach(slot => {
-      if (slot.status !== 'paid') return;
-      const payer = (slot.memo || '').trim() || '(미입력)';
-      // 시작~종료 시간 차이 계산 (시간 단위)
-      const [sh, sm] = (slot.start || '00:00').split(':').map(Number);
-      const [eh, em] = (slot.end   || '00:00').split(':').map(Number);
-      const hours = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
-      if (hours > 0) hoursByMemo[payer] = (hoursByMemo[payer] || 0) + hours;
-    });
-  });
-
-  const entries = Object.entries(hoursByMemo).sort((a,b) => b[1]-a[1]);
-  badge.textContent = `${entries.length}명`;
-
-  if (!entries.length) {
-    container.innerHTML = '<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint);">이번 달 결제완료 내역이 없어요</div>';
-    return;
-  }
-
-  // 컴팩트 인라인 레이아웃: 서주환 3시간 │ 김태연 2시간
-  container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
-      ${entries.map(([name, hrs]) => {
-        const display = Number.isInteger(hrs) ? `${hrs}시간` : `${hrs}시간`;
-        return `<span style="font-size:12px;color:var(--text-sub);">
-          <span style="font-weight:600;color:#0a5c36;">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:#0a5c36;margin-left:3px;">${display}</span>
-        </span>`;
-      }).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
-    </div>
-  `;
-}
-
-async function trackVisit() {
-  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
-  await sb.rpc('upsert_visit', { visit_date: today });
-}
-
-async function renderVisitStats() {
-  const { data } = await sb.from('visits').select('*').order('visited_at', { ascending: false });
-  if (!data || !data.length) {
-    document.getElementById('visit-stats').innerHTML = '<div style="text-align:center;font-size:13px;color:var(--text-hint);">아직 데이터가 없어요</div>';
-    return;
-  }
-  const today = new Date(Date.now() + 9*60*60*1000).toISOString().split('T')[0];
-  const monthStr = today.slice(0, 7);
-  const todayRow = data.find(r => r.visited_at === today);
-  const todayCount = todayRow ? todayRow.count : 0;
-  const monthCount = data.filter(r => r.visited_at.startsWith(monthStr)).reduce((s, r) => s + r.count, 0);
-  const totalCount = data.reduce((s, r) => s + r.count, 0);
-  document.getElementById('visit-total-badge').textContent = `총 ${totalCount.toLocaleString()}회`;
-  const recentRows = data.slice(0, 7);
-  const maxCount = Math.max(...recentRows.map(r => r.count), 1);
-  document.getElementById('visit-stats').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
-      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
-        <div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;">오늘</div>
-        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;">${todayCount}</div>
-      </div>
-      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
-        <div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;">이번 달</div>
-        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;">${monthCount}</div>
-      </div>
-      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px 6px;">
-        <div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;">누적</div>
-        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;">${totalCount}</div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:8px;">최근 7일</div>
-    <div style="display:flex;flex-direction:column;gap:5px;">
-      ${recentRows.map(r => {
-        const pct = Math.round((r.count / maxCount) * 100);
-        const dateLabel = r.visited_at.slice(5).replace('-', '/');
-        return `<div style="display:flex;align-items:center;gap:8px;">
-          <div style="font-size:11px;color:var(--text-hint);font-family:'DM Mono',monospace;min-width:36px;">${dateLabel}</div>
-          <div style="flex:1;background:var(--surface2);border-radius:4px;height:14px;overflow:hidden;">
-            <div style="width:${pct}%;background:var(--accent-mid);height:100%;border-radius:4px;"></div>
-          </div>
-          <div style="font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace;min-width:24px;text-align:right;">${r.count}</div>
-        </div>`;
-      }).join('')}
-    </div>
-  `;
-}
-
-function dismissPayBanner() {
-  const k = 'pay-hide-' + new Date().getFullYear() + '-' + (new Date().getMonth()+1);
-  localStorage.setItem(k, '1');
-  document.getElementById('pay-banner').style.display = 'none';
-}
-function checkPaymentBanner() {
-  const k = 'pay-hide-' + new Date().getFullYear() + '-' + (new Date().getMonth()+1);
-  if (localStorage.getItem(k)) return;
-  const now = new Date();
-  const day = now.getDate(), hour = now.getHours();
-  const show = (day === 18 && hour >= 10) || (day > 18 && day < 22) || (day === 22 && hour < 9);
-  if (show) document.getElementById('pay-banner').style.display = 'flex';
-}
-
-// ── 편집 모드 ─────────────────────────────────────────────
-let editMode = false;
-let cachedPw = null;
-
-function toggleEditMode() {
-  if (editMode) { editMode = false; applyEditMode(); }
-  else {
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-error').textContent = '';
-    document.getElementById('pw-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('pw-input').focus(), 100);
-  }
-}
-
-async function confirmPassword() {
-  const val = document.getElementById('pw-input').value;
-  if (!cachedPw) {
-    const { data } = await sb.from('app_config').select('value').eq('key', 'edit_password').single();
-    cachedPw = data?.value || null;
-  }
-  if (val === cachedPw) {
-    editMode = true; closePwModal(); applyEditMode();
-  } else {
-    document.getElementById('pw-error').textContent = '비밀번호가 틀렸어요.';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-  }
-}
-
-function closePwModal() { document.getElementById('pw-modal').classList.add('hidden'); }
-
-function applyEditMode() {
-  const btn = document.getElementById('edit-mode-btn');
-  const icon = document.getElementById('edit-mode-icon');
-  const label = document.getElementById('edit-mode-label');
-  if (editMode) { btn.classList.add('active'); icon.textContent = '🔓'; label.textContent = '편집 중'; }
-  else { btn.classList.remove('active'); icon.textContent = '🔒'; label.textContent = '편집'; }
-}
-
-function requireEdit() {
-  if (!editMode) {
-    if (REQUIRE_PASSWORD) {
-      document.getElementById('pw-input').value = '';
-      document.getElementById('pw-error').textContent = '';
-      document.getElementById('pw-modal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('pw-input').focus(), 100);
-    } else {
-      editMode = true; applyEditMode();
+        updateUI();
     }
-    return false;
-  }
-  return true;
-}
 
-// ── 월별 메모 ─────────────────────────────────────────────
-let memoOriginal = '';
-function getMemoKey() { return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`; }
+    function updateUI() {
+        const displayMonth = currentMonth + 1;
+        document.getElementById('month-label').textContent = `${currentYear}.${String(displayMonth).padStart(2,'0')}`;
+        document.getElementById('current-month-title').textContent = `${displayMonth}월`;
+        document.getElementById('memo-btn-label').textContent = `${displayMonth}월 메모`;
+        document.getElementById('memo-modal-title').textContent = `${displayMonth}월 메모`;
+        
+        renderCalendar();
+        renderMembersOverview();
+    }
 
-async function openMemo() {
-  const key = getMemoKey();
-  document.getElementById('memo-modal-title').textContent = `${currentMonth+1}월 메모`;
-  document.getElementById('memo-modal').classList.remove('hidden');
-  document.getElementById('memo-textarea').value = '불러오는 중...';
-  document.getElementById('memo-save-btn').disabled = true;
-  const { data } = await sb.from('memos').select('content').eq('month_key', key).single();
-  memoOriginal = data?.content || '';
-  document.getElementById('memo-textarea').value = memoOriginal;
-  document.getElementById('memo-textarea').focus();
-}
+    function renderCalendar() {
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        let html = '';
 
-function closeMemo() { document.getElementById('memo-modal').classList.add('hidden'); }
-function onBackdropClick(e) { if (e.target === document.getElementById('memo-modal')) closeMemo(); }
-function onMemoInput() {
-  document.getElementById('memo-save-btn').disabled = (document.getElementById('memo-textarea').value === memoOriginal);
-}
+        for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = new Date().toISOString().split('T')[0] === dateStr;
+            const dayEvents = events[dateStr]?.slots || [];
+            
+            html += `<div class="cal-day ${isToday?'today':''} ${dateStr===selectedDate?'selected':''}" onclick="selectDate('${dateStr}')">
+                <div class="day-num">${d}</div>
+                ${dayEvents.map(e => `<div class="event-chip court-${e.court}">${e.court}코트 ${e.start_time}</div>`).join('')}
+            </div>`;
+        }
+        document.getElementById('cal-grid').innerHTML = html;
+    }
 
-async function saveMemo() {
-  if (!requireEdit()) return;
-  const key = getMemoKey();
-  const content = document.getElementById('memo-textarea').value;
-  document.getElementById('memo-save-btn').disabled = true;
-  showLoading('메모 저장 중...');
-  await sb.from('memos').upsert({ month_key: key, content }, { onConflict: 'month_key' });
-  memoOriginal = content;
-  hideLoading(); closeMemo();
-}
+    function selectDate(date) {
+        selectedDate = date;
+        renderCalendar();
+        const detail = events[date] || { members: [], slots: [] };
+        document.getElementById('detail-date').textContent = date;
+        
+        let html = '<div class="member-grid">';
+        masterRoster.forEach(name => {
+            const isAttending = detail.members.includes(name);
+            html += `<div class="member-chip ${isAttending?'attending':''}" onclick="toggleAttendance('${name}')">${name}</div>`;
+        });
+        html += '</div>';
+        document.getElementById('events-detail').innerHTML = html;
+    }
 
-// ── 시작 ─────────────────────────────────────────────────
-applyEditMode();
-trackVisit();
-checkPaymentBanner();
-loadWeather().then(() => renderCalendar());
-loadAll();
-renderVisitStats();
-</script>
+    async function toggleAttendance(name) {
+        if(!selectedDate) return;
+        let members = events[selectedDate]?.members || [];
+        if(members.includes(name)) members = members.filter(m => m !== name);
+        else members.push(name);
 
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/ssuniss/service-worker.js")
-        .then(r => console.log("SW 등록:", r.scope))
-        .catch(e => console.error("SW 실패:", e));
-    });
-  }
+        const { error } = await sb.from('schedules').upsert({ date: selectedDate, members: members }, { onConflict: 'date' });
+        if(!error) {
+            if(!events[selectedDate]) events[selectedDate] = { members: [], slots: [] };
+            events[selectedDate].members = members;
+            selectDate(selectedDate);
+            renderMembersOverview();
+        }
+    }
 
-  // ── iOS 홈 화면 추가 안내 ──
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if (isIOS && !isStandalone && !localStorage.getItem('ios-pwa-dismissed')) {
-    const b = document.createElement('div');
-    b.innerHTML = `<div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.35);z-index:9999;font-family:-apple-system,sans-serif;font-size:13px;min-width:280px;max-width:340px;">
-      <span style="font-size:26px;flex-shrink:0;">🎾</span>
-      <div style="flex:1;line-height:1.6;">
-        <div style="font-weight:700;margin-bottom:4px;">홈 화면에 추가하기</div>
-        <div style="opacity:.8;font-size:12px;">Safari 하단 <span style="background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-weight:600;">공유 □↑</span> 버튼 →<br><strong>"홈 화면에 추가"</strong> 탭하세요</div>
-      </div>
-      <button onclick="localStorage.setItem('ios-pwa-dismissed','1');this.closest('div').parentElement.remove();" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:22px;padding:0;line-height:1;align-self:flex-start;flex-shrink:0;">×</button>
-    </div>`;
-    document.body.appendChild(b);
-    setTimeout(() => { if (b.parentElement) b.remove(); }, 15000);
-  }
+    function renderMembersOverview() {
+        const counts = {};
+        Object.values(events).forEach(e => {
+            e.members.forEach(m => counts[m] = (counts[m] || 0) + 1);
+        });
 
-  // ── Android 설치 프롬프트 ──
-  let _pwaPrompt = null;
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    _pwaPrompt = e;
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
-    const b = document.createElement("div");
-    b.id = "pwa-banner";
-    b.innerHTML = '<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;font-family:-apple-system,sans-serif;font-size:14px;min-width:280px;max-width:360px"><span style="font-size:28px">🎾</span><div style="flex:1"><div style="font-weight:bold;margin-bottom:2px">슈니스 앱으로 설치하기</div><div style="opacity:.8;font-size:12px">홈 화면에 추가하면 더 빠르게 접근할 수 있어요!</div></div><div style="display:flex;flex-direction:column;gap:6px"><button id="pwa-install" style="background:#ccff00;color:#1a3a5c;border:none;border-radius:8px;padding:6px 14px;font-weight:bold;cursor:pointer;font-size:13px">설치</button><button id="pwa-later" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:12px">나중에</button></div></div>';
-    document.body.appendChild(b);
-    document.getElementById("pwa-install").onclick = async () => { _pwaPrompt.prompt(); await _pwaPrompt.userChoice; b.remove(); _pwaPrompt=null; };
-    document.getElementById("pwa-later").onclick = () => b.remove();
-  });
-  window.addEventListener("appinstalled", () => { const b=document.getElementById("pwa-banner"); if(b) b.remove(); });
+        const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+        document.getElementById('members-overview').innerHTML = sorted.map(([name, count]) => 
+            `<div class="member-chip attending">${name} <span style="margin-left:4px; font-size:10px; opacity:0.7;">${count}회</span></div>`
+        ).join('') || '<div style="color:var(--text-hint); font-size:12px;">참여 데이터가 없습니다.</div>';
+    }
+
+    async function addEvent() {
+        const date = document.getElementById('new-date').value;
+        const court = document.getElementById('new-court').value;
+        const memo = document.getElementById('new-memo').value;
+        if(!date) return alert('날짜를 선택하세요');
+
+        showLoading('등록 중...');
+        await sb.from('slots').insert([{ date, court, memo, start_time: '18:00', end_time: '20:00' }]);
+        await loadData();
+        hideLoading();
+    }
+
+    function changeMonth(diff) {
+        currentMonth += diff;
+        if(currentMonth < 0) { currentMonth = 11; currentYear--; }
+        if(currentMonth > 11) { currentMonth = 0; currentYear++; }
+        loadData();
+    }
+
+    function openMemo() { document.getElementById('memo-modal').classList.remove('hidden'); }
+    function closeMemo() { document.getElementById('memo-modal').classList.add('hidden'); }
+    function showLoading(msg) { document.getElementById('loading').classList.remove('hidden'); }
+    function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
+    init();
 </script>
 </body>
 </html>
