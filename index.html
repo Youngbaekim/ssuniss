@@ -575,10 +575,10 @@ function renderDetail() {
   // 날씨 정보
   const w = weatherData[selectedDate];
   if (w) {
-    dowEl.innerHTML = `${weekDaysFull[dow]} &nbsp;${w.icon} ${w.max}°/${w.min}° &nbsp;<span style="color:#4472b8;">🌂${w.rain}%</span>`;
-  } else {
-    dowEl.textContent = weekDaysFull[dow];
-  }
+  dowEl.innerHTML = `${weekDaysFull[dow]} &nbsp;<span onclick="window.open('https://www.google.com/search?q=관악구+날씨','_blank')" style="cursor:pointer;" title="클릭하면 구글 날씨로 이동">${w.icon} ${w.max}°/${w.min}° &nbsp;<span style="color:#4472b8;">🌂${w.rain}%</span></span>`;
+} else {
+  dowEl.textContent = weekDaysFull[dow];
+}
 
   const dayData = events[selectedDate];
   const slots = dayData?.slots || [];
