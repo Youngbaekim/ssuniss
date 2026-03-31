@@ -168,6 +168,14 @@
   .pw-confirm { flex: 1; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   .pw-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   #edit-mode-btn { display: none !important; }
+
+  /* ── 참여/결제 현황 칩 스타일 ── */
+  .overview-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+  .overview-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--accent-light); border-radius: 20px; padding: 4px 10px; }
+  .overview-chip .chip-name { font-size: 12px; font-weight: 600; color: var(--accent); }
+  .overview-chip .chip-val  { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); }
+  .paid-chip { background: #d1e7dd; }
+  .paid-chip .chip-name, .paid-chip .chip-val { color: #0a5c36; }
 </style>
   <meta name="theme-color" content="#1a3a5c">
   <meta name="mobile-web-app-capable" content="yes">
@@ -234,7 +242,7 @@
         </a>
         <button id="memo-btn" onclick="openMemo()"
           style="font-size:12px;font-weight:600;color:#3949ab;background:#e8eaf6;border:1px solid #9fa8da;border-radius:20px;padding:5px 10px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background 0.15s;">
-          📝 <span id="memo-btn-label"></span>
+          📝 <span id="memo-btn-label">3월 메모</span>
         </button>
       </div>
       <div style="margin-top:8px;font-size:12px;color:var(--red);font-weight:500;">
@@ -294,7 +302,8 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-label">예약자 (메모)</div>
+            <!-- ✏️ 변경: "예약자 (메모)" → "예약(결제)자 성명" -->
+            <div class="form-label">예약(결제)자 성명</div>
             <input type="text" class="form-input" id="new-memo" placeholder="김숭실">
           </div>
           <button class="btn-primary" id="add-btn" onclick="addEvent()">+ 일정 추가</button>
@@ -302,19 +311,19 @@
       </div>
     </div>
 
-    <!-- 이달 참여 현황 -->
+    <!-- 이달 참여 현황: "이달" → "X월" -->
     <div class="card">
       <div class="card-head">
-        <h3>🎾 이달 참여 현황</h3>
+        <h3>🎾 <span id="monthly-title">이달</span> 참여현황</h3>
         <span class="badge" id="member-count-badge">0명</span>
       </div>
       <div class="card-body" id="members-overview" style="padding-top:8px;padding-bottom:8px;"></div>
     </div>
 
-    <!-- 금년 참여 현황 -->
+    <!-- 금년 참여현황 -->
     <div class="card">
       <div class="card-head">
-        <h3>📅 <span id="yearly-title">2026년</span> 참여 현황</h3>
+        <h3>📅 <span id="yearly-title">2026년</span> 참여현황</h3>
         <span class="badge" id="yearly-count-badge">0명</span>
       </div>
       <div class="card-body" id="yearly-overview" style="padding-top:8px;padding-bottom:8px;">
@@ -534,6 +543,7 @@ async function prevMonth() {
   await loadMonthData();
   hideLoading();
   renderCalendar(); renderDetail();
+  renderYearlyOverview();
 }
 async function nextMonth() {
   if (++currentMonth > 11) { currentMonth = 0; currentYear++; }
@@ -543,6 +553,7 @@ async function nextMonth() {
   await loadMonthData();
   hideLoading();
   renderCalendar(); renderDetail();
+  renderYearlyOverview();
 }
 
 function selectDate(ds) {
@@ -761,7 +772,11 @@ async function deleteRosterMember(name) {
   renderRoster(); renderDetail(); renderCalendar();
 }
 
+// ── 참여현황: 칩 레이아웃으로 변경 + 월 타이틀 갱신 ──────
 function renderMembersOverview() {
+  // 타이틀 갱신 ← 핵심 변경
+  document.getElementById('monthly-title').textContent = `${currentMonth + 1}월`;
+
   const container = document.getElementById('members-overview');
   const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
   const counts = {};
@@ -775,14 +790,15 @@ function renderMembersOverview() {
     container.innerHTML = '<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--text-hint)">이번 달 참여 멤버가 없어요</div>';
     renderRoster(); renderPaidOverview(); return;
   }
+  // ← 칩 방식으로 변경 (모바일 줄바꿈 자연스러움)
   container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
+    <div class="overview-chips">
       ${members.map(([name, cnt]) =>
-        `<span style="font-size:12px;">
-          <span style="font-weight:600;color:var(--accent);">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:var(--text-sub);margin-left:3px;">${cnt}회</span>
-        </span>`
-      ).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
+        `<div class="overview-chip">
+          <span class="chip-name">${name}</span>
+          <span class="chip-val">${cnt}회</span>
+        </div>`
+      ).join('')}
     </div>
   `;
   renderRoster();
@@ -795,7 +811,6 @@ async function renderYearlyOverview() {
   const badge = document.getElementById('yearly-count-badge');
   document.getElementById('yearly-title').textContent = `${currentYear}년`;
 
-  // 금년 전체 데이터 로드
   const { data: schedData } = await sb.from('schedules')
     .select('date, members')
     .gte('date', `${currentYear}-01-01`)
@@ -816,31 +831,29 @@ async function renderYearlyOverview() {
   badge.textContent = `${members.length}명`;
 
   container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
+    <div class="overview-chips">
       ${members.map(([name, cnt]) =>
-        `<span style="font-size:12px;">
-          <span style="font-weight:600;color:var(--accent);">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:var(--text-sub);margin-left:3px;">${cnt}회</span>
-        </span>`
-      ).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
+        `<div class="overview-chip">
+          <span class="chip-name">${name}</span>
+          <span class="chip-val">${cnt}회</span>
+        </div>`
+      ).join('')}
     </div>
   `;
 }
 
-// ── 결제완료 현황 ─────────────────────────────────────────
+// ── 결제완료 현황: 칩 레이아웃으로 변경 ─────────────────────
 function renderPaidOverview() {
   const container = document.getElementById('paid-overview');
   const badge = document.getElementById('paid-month-badge');
   const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
 
-  // 예약자(메모) 기준으로 시간 집계
   const hoursByMemo = {};
   Object.entries(events).forEach(([date, day]) => {
     if (!date.startsWith(monthStr)) return;
     (day.slots || []).forEach(slot => {
       if (slot.status !== 'paid') return;
       const payer = (slot.memo || '').trim() || '(미입력)';
-      // 시작~종료 시간 차이 계산 (시간 단위)
       const [sh, sm] = (slot.start || '00:00').split(':').map(Number);
       const [eh, em] = (slot.end   || '00:00').split(':').map(Number);
       const hours = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
@@ -856,16 +869,16 @@ function renderPaidOverview() {
     return;
   }
 
-  // 컴팩트 인라인 레이아웃: 서주환 3시간 │ 김태연 2시간
+  // ← 칩 방식으로 변경 (모바일 줄바꿈 자연스러움)
   container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
+    <div class="overview-chips">
       ${entries.map(([name, hrs]) => {
-        const display = Number.isInteger(hrs) ? `${hrs}시간` : `${hrs}시간`;
-        return `<span style="font-size:12px;color:var(--text-sub);">
-          <span style="font-weight:600;color:#0a5c36;">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:#0a5c36;margin-left:3px;">${display}</span>
-        </span>`;
-      }).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
+        const display = Number.isInteger(hrs) ? `${hrs}시간` : `${hrs.toFixed(1)}시간`;
+        return `<div class="overview-chip paid-chip">
+          <span class="chip-name">${name}</span>
+          <span class="chip-val">${display}</span>
+        </div>`;
+      }).join('')}
     </div>
   `;
 }
@@ -1024,11 +1037,6 @@ async function saveMemo() {
 }
 
 // ── 시작 ─────────────────────────────────────────────────
-// 현재 월로 라벨 초기화
-document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
-document.getElementById('monthly-title').textContent = `${currentMonth+1}월`;
-document.getElementById('yearly-title').textContent = `${currentYear}년`;
-
 applyEditMode();
 trackVisit();
 checkPaymentBanner();
