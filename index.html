@@ -781,18 +781,22 @@ function renderPaidOverview() {
   const badge = document.getElementById('paid-month-badge');
   const monthStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
 
-  // 예약자(메모) 기준으로 집계
-  const paidByMemo = {};
+  // 예약자(메모) 기준으로 시간 집계
+  const hoursByMemo = {};
   Object.entries(events).forEach(([date, day]) => {
     if (!date.startsWith(monthStr)) return;
     (day.slots || []).forEach(slot => {
       if (slot.status !== 'paid') return;
       const payer = (slot.memo || '').trim() || '(미입력)';
-      paidByMemo[payer] = (paidByMemo[payer] || 0) + 1;
+      // 시작~종료 시간 차이 계산 (시간 단위)
+      const [sh, sm] = (slot.start || '00:00').split(':').map(Number);
+      const [eh, em] = (slot.end   || '00:00').split(':').map(Number);
+      const hours = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
+      if (hours > 0) hoursByMemo[payer] = (hoursByMemo[payer] || 0) + hours;
     });
   });
 
-  const entries = Object.entries(paidByMemo).sort((a,b) => b[1]-a[1]);
+  const entries = Object.entries(hoursByMemo).sort((a,b) => b[1]-a[1]);
   badge.textContent = `${entries.length}명`;
 
   if (!entries.length) {
@@ -800,15 +804,16 @@ function renderPaidOverview() {
     return;
   }
 
-  // 컴팩트 인라인 레이아웃: 김태연 2회 · 임선영 1회
+  // 컴팩트 인라인 레이아웃: 서주환 3시간 │ 김태연 2시간
   container.innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;">
-      ${entries.map(([name, cnt]) =>
-        `<span style="font-size:12px;color:var(--text-sub);">
+      ${entries.map(([name, hrs]) => {
+        const display = Number.isInteger(hrs) ? `${hrs}시간` : `${hrs}시간`;
+        return `<span style="font-size:12px;color:var(--text-sub);">
           <span style="font-weight:600;color:#0a5c36;">${name}</span>
-          <span style="font-family:'DM Mono',monospace;color:#0a5c36;margin-left:3px;">${cnt}회</span>
-        </span>`
-      ).join('<span style="color:var(--border);font-size:12px;">│</span>')}
+          <span style="font-family:'DM Mono',monospace;color:#0a5c36;margin-left:3px;">${display}</span>
+        </span>`;
+      }).join('<span style="color:var(--border);font-size:12px;"> │ </span>')}
     </div>
   `;
 }
