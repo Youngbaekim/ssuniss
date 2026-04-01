@@ -168,7 +168,30 @@
   .pw-confirm { flex: 1; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   .pw-cancel { background: var(--surface2); color: var(--text-sub); border: 1px solid var(--border); border-radius: 7px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   #edit-mode-btn { display: none !important; }
-
+    
+  /* ── 소개 팝업 ── */
+  .intro-btn { background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.45); color: white; padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; white-space: nowrap; }
+  .intro-btn:hover { background: rgba(255,255,255,0.32); }
+  .intro-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.18s ease; }
+  .intro-backdrop.hidden { display: none; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .intro-box { background: #fff; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.18); width: 100%; max-width: 400px; overflow: hidden; animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .intro-top { background: linear-gradient(135deg, #2d6a4f 0%, #52b788 100%); padding: 24px 20px 20px; text-align: center; }
+  .intro-emoji { font-size: 44px; display: block; margin-bottom: 8px; animation: bounce 1.2s infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .intro-top-title { color: white; font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .intro-top-sub { color: rgba(255,255,255,0.82); font-size: 12px; margin-top: 4px; }
+  .intro-body { padding: 20px 20px 6px; }
+  .intro-body p { font-size: 13px; line-height: 1.85; color: #333; margin-bottom: 12px; }
+  .intro-highlight { background: #d8ede4; border-left: 3px solid #52b788; border-radius: 6px; padding: 10px 13px; font-size: 12px; color: #1a5c38; line-height: 1.75; margin-bottom: 12px; }
+  .intro-recruit { text-align: center; font-size: 12px; font-weight: 700; color: #2d6a4f; background: #eafaf1; border: 1.5px dashed #52b788; border-radius: 10px; padding: 8px; margin-bottom: 12px; }
+  .intro-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #eee; padding: 12px 20px 16px; }
+  .intro-president { font-size: 12px; color: #666; }
+  .intro-president strong { color: #2d6a4f; font-size: 13px; }
+  .intro-close-btn { background: #2d6a4f; color: white; border: none; border-radius: 20px; padding: 7px 18px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: background 0.15s; }
+  .intro-close-btn:hover { background: #235c40; }
+    
   /* ── 참여/결제 현황 칩 스타일 ── */
   .overview-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
   .overview-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--accent-light); border-radius: 20px; padding: 4px 10px; }
@@ -195,6 +218,7 @@
 
 <div class="header">
   <div class="header-title"><span>🎾</span> SSU Tennis, SSUNIS!!</div>
+  <button class="intro-btn" onclick="openIntro()">🎾 슈니스 소개</button>
   <div style="display:flex;align-items:center;gap:10px;">
     <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">
       <span id="edit-mode-icon">🔒</span><span id="edit-mode-label">편집</span>
@@ -373,6 +397,30 @@
   </div>
 </div>
 
+<!-- 소개 팝업 -->
+<div class="intro-backdrop hidden" id="intro-modal" onclick="if(event.target===this)closeIntro()">
+  <div class="intro-box">
+    <div class="intro-top">
+      <span class="intro-emoji">🎾</span>
+      <div class="intro-top-title">숭실대학교 직원 테니스 동호회</div>
+      <div class="intro-top-sub">SSUNIS · SSU Tennis, SSUNISS!!</div>
+    </div>
+    <div class="intro-body">
+      <p>SSUNIS는 테니스에 관심 있는 숭실대학교 직원 누구나 함께할 수 있는 <strong>열린 동호회</strong>입니다.<br>
+      초보자부터 경험자까지 모두 환영하며, 즐겁고 건강한 운동 문화를 만들어가고 있습니다.</p>
+      <div class="intro-highlight">
+        🏸 라켓을 처음 잡아보는 분도 괜찮습니다.<br>
+        함께 즐기며 배우는 SSUNIS와 더 건강한 생활을 시작해보세요!
+      </div>
+      <div class="intro-recruit">✨ 신입 회원 상시 모집 중 ✨</div>
+    </div>
+    <div class="intro-footer">
+      <div class="intro-president">회장 <strong>서주환</strong> 🎾</div>
+      <button class="intro-close-btn" onclick="closeIntro()">닫기</button>
+    </div>
+  </div>
+</div>
+    
 <!-- 비밀번호 모달 -->
 <div class="pw-modal-backdrop hidden" id="pw-modal">
   <div class="pw-box">
@@ -1036,6 +1084,11 @@ async function saveMemo() {
   hideLoading(); closeMemo();
 }
 
+// ── 소개 팝업 ─────────────────────────────────────────────
+function openIntro()  { document.getElementById('intro-modal').classList.remove('hidden'); }
+function closeIntro() { document.getElementById('intro-modal').classList.add('hidden'); }
+
+    
 // ── 시작 ─────────────────────────────────────────────────
 
 document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
