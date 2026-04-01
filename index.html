@@ -242,7 +242,7 @@
         </a>
         <button id="memo-btn" onclick="openMemo()"
           style="font-size:12px;font-weight:600;color:#3949ab;background:#e8eaf6;border:1px solid #9fa8da;border-radius:20px;padding:5px 10px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background 0.15s;">
-          📝 <span id="memo-btn-label">3월 메모</span>
+          📝 <span id="memo-btn-label"></span>
         </button>
       </div>
       <div style="margin-top:8px;font-size:12px;color:var(--red);font-weight:500;">
@@ -1037,6 +1037,11 @@ async function saveMemo() {
 }
 
 // ── 시작 ─────────────────────────────────────────────────
+
+document.getElementById('memo-btn-label').textContent = `${currentMonth+1}월 메모`;
+document.getElementById('monthly-title').textContent = `${currentMonth+1}월`;
+document.getElementById('yearly-title').textContent = `${currentYear}년`;
+
 applyEditMode();
 trackVisit();
 checkPaymentBanner();
