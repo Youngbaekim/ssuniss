@@ -472,12 +472,21 @@ function getCourtClass(c) { return courtClass[c] || 'court-etc'; }
 function getCourtColor(c) { return courtColor[c] || '#888780'; }
 const weekDaysFull = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
 
+let _loadingShownAt = 0;
 function showLoading(msg='저장 중...') {
   document.querySelector('#loading .loading-text').textContent = msg;
-  document.getElementById('loading').classList.remove('hidden');
+  const el = document.getElementById('loading');
+  el.classList.remove('hidden', 'fadeout');
+  _loadingShownAt = Date.now();
 }
 function hideLoading() {
-  document.getElementById('loading').classList.add('hidden');
+  const el = document.getElementById('loading');
+  const elapsed = Date.now() - _loadingShownAt;
+  const delay = Math.max(0, 2000 - elapsed);
+  setTimeout(() => {
+    el.classList.add('fadeout');
+    setTimeout(() => el.classList.add('hidden'), 650);
+  }, delay);
 }
 
 async function loadAll() {
