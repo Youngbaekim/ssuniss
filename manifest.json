@@ -5,8 +5,8 @@
   "start_url": "/ssuniss/",
   "scope": "/ssuniss/",
   "display": "standalone",
-  "background_color": "#1a3a5c",
-  "theme_color": "#1a3a5c",
+  "background_color": "#2d6a4f",
+  "theme_color": "#2d6a4f",
   "orientation": "portrait-primary",
   "lang": "ko",
   "icons": [
